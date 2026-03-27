@@ -1,0 +1,443 @@
+/**
+ * Microsoft Graph API Service
+ * Handles authentication, token management, and API calls to Microsoft Graph
+ */
+
+import { Injectable, Logger, BadRequestException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import axios, { AxiosInstance, AxiosError } from 'axios';
+import {
+  MicrosoftTokenResponse,
+  MicrosoftUserProfile,
+  MicrosoftEvent,
+  MicrosoftTranscript,
+  GraphApiResponse,
+  MicrosoftTokenRefreshRequest,
+  MicrosoftAuthCodeRequest,
+  GetUserMeetingsOptions,
+  CalendarViewRequest,
+} from './interfaces/microsoft.interfaces';
+
+@Injectable()
+export class MicrosoftService {
+  private readonly logger = new Logger(MicrosoftService.name);
+  private readonly httpClient: AxiosInstance;
+  private readonly clientId: string;
+  private readonly clientSecret: string;
+  private readonly redirectUri: string;
+  private readonly tenant: string;
+  private readonly graphApiBaseUrl = 'https://graph.microsoft.com/v1.0';
+  private readonly tokenUrl: string;
+
+  constructor(private readonly configService: ConfigService) {
+    this.clientId = this.configService.getOrThrow<string>('MICROSOFT_CLIENT_ID');
+    this.clientSecret = this.configService.getOrThrow<string>('MICROSOFT_CLIENT_SECRET');
+    this.redirectUri = this.configService.getOrThrow<string>('MICROSOFT_REDIRECT_URI');
+    this.tenant = this.configService.getOrThrow<string>('MICROSOFT_TENANT_ID');
+    this.tokenUrl = `https://login.microsoftonline.com/${this.tenant}/oauth2/v2.0/token`;
+
+    this.httpClient = axios.create({
+      timeout: 30000,
+      validateStatus: () => true, // Handle all status codes manually
+    });
+  }
+
+  /**
+   * Exchange authorization code for access and refresh tokens
+   * @param code - Authorization code from Microsoft OAuth flow
+   * @returns MicrosoftTokenResponse with access_token and refresh_token
+   */
+  async exchangeCodeForTokens(code: string): Promise<MicrosoftTokenResponse> {
+    try {
+      if (!code || code.trim().length === 0) {
+        throw new BadRequestException('Authorization code is required');
+      }
+
+      const payload: MicrosoftAuthCodeRequest = {
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        code: code,
+        redirect_uri: this.redirectUri,
+        grant_type: 'authorization_code',
+        scope: 'offline_access Calendars.Read User.Read',
+      };
+
+      this.logger.debug(`Exchanging authorization code for tokens from ${this.tokenUrl}`);
+
+      const response = await this.httpClient.post<MicrosoftTokenResponse>(this.tokenUrl, payload);
+
+      if (response.status !== 200) {
+        this.logger.error(`Token exchange failed with status ${response.status}`, response.data);
+        throw new UnauthorizedException(
+          `Failed to exchange authorization code: ${response.data?.error_description || 'Unknown error'}`,
+        );
+      }
+
+      if (!response.data.access_token) {
+        throw new UnauthorizedException('No access token in response');
+      }
+
+      this.logger.debug('Successfully exchanged authorization code for tokens');
+      return response.data;
+    } catch (error) {
+      this.logger.error('Error exchanging authorization code', error);
+      if (error instanceof (BadRequestException || UnauthorizedException)) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to exchange authorization code');
+    }
+  }
+
+  /**
+   * Refresh Microsoft access token using refresh token
+   * @param refreshToken - Refresh token from previous authentication
+   * @returns MicrosoftTokenResponse with new access_token
+   */
+  async refreshAccessToken(refreshToken: string): Promise<MicrosoftTokenResponse> {
+    try {
+      if (!refreshToken || refreshToken.trim().length === 0) {
+        throw new BadRequestException('Refresh token is required');
+      }
+
+      const payload: MicrosoftTokenRefreshRequest = {
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+        scope: 'offline_access Calendars.Read User.Read',
+      };
+
+      this.logger.debug('Attempting to refresh access token');
+
+      const response = await this.httpClient.post<MicrosoftTokenResponse>(this.tokenUrl, payload);
+
+      if (response.status !== 200) {
+        this.logger.error(`Token refresh failed with status ${response.status}`, response.data);
+        throw new UnauthorizedException(
+          `Failed to refresh access token: ${response.data?.error_description || 'Unknown error'}`,
+        );
+      }
+
+      if (!response.data.access_token) {
+        throw new UnauthorizedException('No access token in refresh response');
+      }
+
+      this.logger.debug('Successfully refreshed access token');
+      return response.data;
+    } catch (error) {
+      this.logger.error('Error refreshing access token', error);
+      if (error instanceof (BadRequestException || UnauthorizedException)) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to refresh access token');
+    }
+  }
+
+  /**
+   * Get user profile from Microsoft Graph
+   * @param accessToken - Valid Microsoft access token
+   * @returns MicrosoftUserProfile with user information
+   */
+  async getUserProfile(accessToken: string): Promise<MicrosoftUserProfile> {
+    try {
+      if (!accessToken || accessToken.trim().length === 0) {
+        throw new UnauthorizedException('Access token is required');
+      }
+
+      const url = `${this.graphApiBaseUrl}/me`;
+      this.logger.debug(`Fetching user profile from ${url}`);
+
+      const response = await this.httpClient.get<MicrosoftUserProfile>(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 401) {
+        throw new UnauthorizedException('Access token is invalid or expired');
+      }
+
+      if (response.status !== 200) {
+        this.logger.error(`Failed to fetch user profile with status ${response.status}`, response.data);
+        throw new InternalServerErrorException('Failed to fetch user profile');
+      }
+
+      this.logger.debug(`Successfully fetched user profile for ${response.data.userPrincipalName}`);
+      return response.data;
+    } catch (error) {
+      this.logger.error('Error fetching user profile', error);
+      if (error instanceof (UnauthorizedException || InternalServerErrorException)) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to fetch user profile');
+    }
+  }
+
+  /**
+   * Get user meetings/events from Microsoft Graph Calendar
+   * @param accessToken - Valid Microsoft access token
+   * @param params - Optional parameters for filtering and pagination
+   * @returns Array of MicrosoftEvent with all meetings
+   */
+  async getUserMeetings(accessToken: string, params?: GetUserMeetingsOptions): Promise<MicrosoftEvent[]> {
+    try {
+      if (!accessToken || accessToken.trim().length === 0) {
+        throw new UnauthorizedException('Access token is required');
+      }
+
+      const url = `${this.graphApiBaseUrl}/me/events`;
+      const queryParams: string[] = [];
+
+      // Build query parameters
+      if (params?.startDate && params?.endDate) {
+        const startDate = new Date(params.startDate).toISOString();
+        const endDate = new Date(params.endDate).toISOString();
+        queryParams.push(`$filter=start/dateTime ge '${startDate}' and end/dateTime le '${endDate}'`);
+      }
+
+      if (params?.top) {
+        queryParams.push(`$top=${params.top}`);
+      }
+
+      if (params?.skip) {
+        queryParams.push(`$skip=${params.skip}`);
+      }
+
+      if (params?.orderBy) {
+        queryParams.push(`$orderby=${params.orderBy}`);
+      }
+
+      const queryString = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
+      const fullUrl = url + queryString;
+
+      this.logger.debug(`Fetching user meetings from ${fullUrl}`);
+
+      const response = await this.httpClient.get<GraphApiResponse<MicrosoftEvent>>(fullUrl, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 401) {
+        throw new UnauthorizedException('Access token is invalid or expired');
+      }
+
+      if (response.status !== 200) {
+        this.logger.error(`Failed to fetch user meetings with status ${response.status}`, response.data);
+        throw new InternalServerErrorException('Failed to fetch user meetings');
+      }
+
+      let events = response.data.value || [];
+
+      // Handle pagination by following @odata.nextLink
+      let nextLink = response.data['@odata.nextLink'];
+      while (nextLink) {
+        this.logger.debug(`Following pagination link: ${nextLink}`);
+        const nextResponse = await this.httpClient.get<GraphApiResponse<MicrosoftEvent>>(nextLink, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (nextResponse.status !== 200) {
+          this.logger.warn(`Pagination request returned status ${nextResponse.status}`);
+          break;
+        }
+
+        events = events.concat(nextResponse.data.value || []);
+        nextLink = nextResponse.data['@odata.nextLink'];
+      }
+
+      this.logger.debug(`Successfully fetched ${events.length} user meetings`);
+      return events;
+    } catch (error) {
+      this.logger.error('Error fetching user meetings', error);
+      if (error instanceof (UnauthorizedException || InternalServerErrorException)) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to fetch user meetings');
+    }
+  }
+
+  /**
+   * Get meeting transcript from Microsoft Graph
+   * Attempts to fetch from both call records and online meetings endpoints
+   * @param accessToken - Valid Microsoft access token
+   * @param meetingId - ID of the meeting or call record
+   * @returns MicrosoftTranscript or null if not available
+   */
+  async getMeetingTranscript(accessToken: string, meetingId: string): Promise<MicrosoftTranscript | null> {
+    try {
+      if (!accessToken || accessToken.trim().length === 0) {
+        throw new UnauthorizedException('Access token is required');
+      }
+
+      if (!meetingId || meetingId.trim().length === 0) {
+        throw new BadRequestException('Meeting ID is required');
+      }
+
+      // Try to get transcript from call records first
+      const callRecordUrl = `${this.graphApiBaseUrl}/me/communications/callRecords/${meetingId}/sessions`;
+      this.logger.debug(`Attempting to fetch transcript from call records: ${callRecordUrl}`);
+
+      const callRecordResponse = await this.httpClient.get(callRecordUrl, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (callRecordResponse.status === 200 && callRecordResponse.data?.value?.length > 0) {
+        const sessionId = callRecordResponse.data.value[0].id;
+        const transcriptUrl = `${this.graphApiBaseUrl}/me/communications/callRecords/${meetingId}/sessions/${sessionId}/transcripts`;
+
+        this.logger.debug(`Fetching transcript from session: ${transcriptUrl}`);
+
+        const transcriptResponse = await this.httpClient.get<GraphApiResponse<MicrosoftTranscript>>(transcriptUrl, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (transcriptResponse.status === 200 && transcriptResponse.data?.value?.length > 0) {
+          this.logger.debug('Successfully fetched meeting transcript from call records');
+          return transcriptResponse.data.value[0];
+        }
+      }
+
+      // Try to get transcript from online meetings
+      const onlineMeetingUrl = `${this.graphApiBaseUrl}/me/onlineMeetings/${meetingId}/transcripts`;
+      this.logger.debug(`Attempting to fetch transcript from online meetings: ${onlineMeetingUrl}`);
+
+      const onlineMeetingResponse = await this.httpClient.get<GraphApiResponse<MicrosoftTranscript>>(
+        onlineMeetingUrl,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (onlineMeetingResponse.status === 200 && onlineMeetingResponse.data?.value?.length > 0) {
+        this.logger.debug('Successfully fetched meeting transcript from online meetings');
+        return onlineMeetingResponse.data.value[0];
+      }
+
+      this.logger.debug(`No transcript found for meeting ${meetingId}`);
+      return null;
+    } catch (error) {
+      this.logger.error('Error fetching meeting transcript', error);
+      if (error instanceof (UnauthorizedException || BadRequestException)) {
+        throw error;
+      }
+      // Return null instead of throwing for transcript not found
+      return null;
+    }
+  }
+
+  /**
+   * Get calendar view for a specific time range
+   * @param accessToken - Valid Microsoft access token
+   * @param start - Start date/time in ISO format
+   * @param end - End date/time in ISO format
+   * @returns Array of MicrosoftEvent in the specified time range
+   */
+  async getCalendarView(accessToken: string, start: string, end: string): Promise<MicrosoftEvent[]> {
+    try {
+      if (!accessToken || accessToken.trim().length === 0) {
+        throw new UnauthorizedException('Access token is required');
+      }
+
+      if (!start || !end) {
+        throw new BadRequestException('Start and end dates are required');
+      }
+
+      // Validate date formats
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new BadRequestException('Invalid date format. Use ISO 8601 format.');
+      }
+
+      if (startDate >= endDate) {
+        throw new BadRequestException('Start date must be before end date');
+      }
+
+      const startISO = startDate.toISOString();
+      const endISO = endDate.toISOString();
+
+      const url = `${this.graphApiBaseUrl}/me/calendarview?startDateTime=${startISO}&endDateTime=${endISO}&$orderby=start/dateTime`;
+
+      this.logger.debug(`Fetching calendar view from ${start} to ${end}`);
+
+      const response = await this.httpClient.get<GraphApiResponse<MicrosoftEvent>>(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          Prefer: 'outlook.timezone="UTC"',
+        },
+      });
+
+      if (response.status === 401) {
+        throw new UnauthorizedException('Access token is invalid or expired');
+      }
+
+      if (response.status !== 200) {
+        this.logger.error(`Failed to fetch calendar view with status ${response.status}`, response.data);
+        throw new InternalServerErrorException('Failed to fetch calendar view');
+      }
+
+      let events = response.data.value || [];
+
+      // Handle pagination
+      let nextLink = response.data['@odata.nextLink'];
+      while (nextLink) {
+        this.logger.debug(`Following calendar view pagination link`);
+        const nextResponse = await this.httpClient.get<GraphApiResponse<MicrosoftEvent>>(nextLink, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (nextResponse.status !== 200) {
+          this.logger.warn(`Calendar view pagination returned status ${nextResponse.status}`);
+          break;
+        }
+
+        events = events.concat(nextResponse.data.value || []);
+        nextLink = nextResponse.data['@odata.nextLink'];
+      }
+
+      this.logger.debug(`Successfully fetched ${events.length} events from calendar view`);
+      return events;
+    } catch (error) {
+      this.logger.error('Error fetching calendar view', error);
+      if (error instanceof (UnauthorizedException || BadRequestException || InternalServerErrorException)) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to fetch calendar view');
+    }
+  }
+
+  /**
+   * Helper method to handle token refresh on 401 response
+   * @param refreshToken - Refresh token to use for renewal
+   * @returns New access token
+   */
+  async handleTokenRefresh(refreshToken: string): Promise<string> {
+    try {
+      const refreshResponse = await this.refreshAccessToken(refreshToken);
+      return refreshResponse.access_token;
+    } catch (error) {
+      this.logger.error('Failed to refresh token on 401 response', error);
+      throw new UnauthorizedException('Token refresh failed. Please re-authenticate.');
+    }
+  }
+}
