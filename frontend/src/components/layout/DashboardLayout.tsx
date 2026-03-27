@@ -96,9 +96,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <>
                 <div className="mb-4 rounded-lg bg-gray-50 p-3">
                   <p className="text-xs text-gray-500">Signed in as</p>
-                  <p className="text-sm font-semibold text-gray-900">
+                  {/* <p className="text-sm font-semibold text-gray-900">
                     {user.displayName}
-                  </p>
+                  </p> */}
                   <p className="truncate text-xs text-gray-600">{user.email}</p>
                 </div>
                 <button
