@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { BotPanel } from '@/components/meeting/BotPanel';
 import { meetingsApi } from '@/services/api';
+import toast from 'react-hot-toast';
 
 const RecordingPlayer = ({ meetingId }: { meetingId: string }) => {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
@@ -176,12 +177,14 @@ const MeetingDetailPage = () => {
     if (!meetingId) return;
 
     setIsProcessing(true);
+    const toastId = toast.loading('Re-running AI analysis...');
     try {
       await dispatch(processMeeting(meetingId) as any).unwrap();
-      // Refresh meeting data
       await dispatch(fetchMeetingById(meetingId) as any);
+      toast.success('AI analysis complete!', { id: toastId });
     } catch (err) {
       console.error('Processing failed:', err);
+      toast.error('AI processing failed. Try again.', { id: toastId });
     } finally {
       setIsProcessing(false);
     }
@@ -189,11 +192,13 @@ const MeetingDetailPage = () => {
 
   // Handle copy summary
   const handleCopySummary = () => {
-    if (!selectedMeeting?.notes) return;
+    if (!selectedMeeting?.notes) {
+      toast.error('No summary to copy');
+      return;
+    }
 
     navigator.clipboard.writeText(selectedMeeting.notes);
-    setCopiedNotification(true);
-    setTimeout(() => setCopiedNotification(false), 2000);
+    toast.success('Summary copied to clipboard');
   };
 
   // Handle export
@@ -231,6 +236,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+    toast.success('Meeting exported successfully');
   };
 
   // Handle translate transcript
@@ -240,12 +246,15 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
       return;
     }
     setIsTranslating(true);
+    const toastId = toast.loading('Translating transcript...');
     try {
       const result = await meetingsApi.translateTranscript(meetingId, 'English');
       setTranslatedTranscript(result.translatedTranscript);
       setShowTranslation(true);
+      toast.success('Translation complete!', { id: toastId });
     } catch (err) {
       console.error('Translation failed:', err);
+      toast.error('Translation failed. Try again.', { id: toastId });
     } finally {
       setIsTranslating(false);
     }
@@ -324,7 +333,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
         </div>
 
         {/* Header */}
-        <div className="border-b border-gray-200 bg-white px-6 py-6 sm:px-8">
+        <div className="border-b border-gray-200 bg-white px-6 py-6 sm:px-8 mm-slide-up">
           <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex-1">
               <h1 className="mb-2 text-3xl font-bold text-gray-900">
@@ -368,7 +377,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                     <div
                       key={participant.id || participant.email || idx}
                       title={displayName}
-                      className="flex-shrink-0 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 h-8 w-8 flex items-center justify-center text-xs font-bold text-white"
+                      className="flex-shrink-0 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 h-8 w-8 flex items-center justify-center text-xs font-bold text-white mm-avatar-hover"
                     >
                       {initials}
                     </div>
@@ -417,22 +426,22 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mm-slide-up mm-slide-up-3">
             <button
               onClick={handleCopySummary}
-              className="btn btn-secondary gap-2"
+              className="btn btn-secondary gap-2 mm-btn-press"
             >
               <Copy className="h-4 w-4" />
-              {copiedNotification ? 'Copied!' : 'Copy Summary'}
+              Copy Summary
             </button>
-            <button onClick={handleExport} className="btn btn-secondary gap-2">
+            <button onClick={handleExport} className="btn btn-secondary gap-2 mm-btn-press">
               <Download className="h-4 w-4" />
               Export
             </button>
             <button
               onClick={handleReprocess}
               disabled={isProcessing}
-              className="btn btn-primary gap-2"
+              className="btn btn-primary gap-2 mm-btn-press"
             >
               {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
               Re-run AI Processing
@@ -441,7 +450,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 bg-white">
+        <div className="border-b border-gray-200 bg-white mm-slide-up mm-slide-up-2">
           <div className="flex px-6 sm:px-8">
             {[
               { id: 'summary', label: 'Summary' },
@@ -473,8 +482,8 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
             <div className="flex-1 min-w-0">
               {/* Summary Tab */}
               {activeTab === 'summary' && (
-                <div className="max-w-4xl">
-                  <div className="rounded-lg bg-white p-6">
+                <div className="max-w-4xl mm-fade-tab">
+                  <div className="rounded-lg bg-white p-6 mm-card-in">
                     {selectedMeeting.notes ? (
                       <div className="prose prose-sm max-w-none text-gray-700">
                         {selectedMeeting.notes.split('\n').map((line, i) => (
@@ -492,13 +501,13 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
 
               {/* Action Items Tab */}
               {activeTab === 'actionItems' && (
-                <div className="max-w-4xl">
+                <div className="max-w-4xl mm-fade-tab">
                   {selectedMeeting.actionItems && selectedMeeting.actionItems.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3 mm-stagger">
                       {selectedMeeting.actionItems.map((item) => (
                         <div
                           key={item.id}
-                          className="flex gap-4 rounded-lg bg-white p-4"
+                          className="flex gap-4 rounded-lg bg-white p-4 mm-card-in mm-hover-lift"
                         >
                           <input
                             type="checkbox"
@@ -558,11 +567,11 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
 
               {/* Decisions Tab */}
               {activeTab === 'decisions' && (
-                <div className="max-w-4xl">
+                <div className="max-w-4xl mm-fade-tab">
                   {selectedMeeting.keyPoints && selectedMeeting.keyPoints.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3 mm-stagger">
                       {selectedMeeting.keyPoints.map((decision, i) => (
-                        <div key={i} className="flex gap-4 rounded-lg bg-white p-4">
+                        <div key={i} className="flex gap-4 rounded-lg bg-white p-4 mm-card-in mm-hover-lift">
                           <div className="flex-shrink-0 rounded-full bg-blue-100 h-8 w-8 flex items-center justify-center font-semibold text-blue-600">
                             {i + 1}
                           </div>
@@ -580,8 +589,8 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
 
               {/* Transcript Tab */}
               {activeTab === 'transcript' && (
-                <div className="max-w-4xl">
-                  <div className="rounded-lg bg-white p-6">
+                <div className="max-w-4xl mm-fade-tab">
+                  <div className="rounded-lg bg-white p-6 mm-card-in">
                     {selectedMeeting.transcript ? (
                       <>
                         {/* Translate controls */}
@@ -634,9 +643,9 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
 
               {/* Productivity Tab */}
               {activeTab === 'productivity' && selectedMeeting.productivity && (
-                <div className="max-w-4xl space-y-6">
+                <div className="max-w-4xl space-y-6 mm-fade-tab">
                   {/* Score Card */}
-                  <div className="rounded-lg bg-white p-6">
+                  <div className="rounded-lg bg-white p-6 mm-card-in">
                     <div className="flex items-center gap-6">
                       <div className="relative h-28 w-28 flex-shrink-0">
                         <svg className="h-28 w-28 -rotate-90" viewBox="0 0 100 100">
@@ -680,9 +689,9 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                             <span className="text-gray-700">{item.label}</span>
                             <span className="font-medium text-gray-900">{item.value}%</span>
                           </div>
-                          <div className="h-2.5 rounded-full bg-gray-200">
+                          <div className="h-2.5 rounded-full bg-gray-200 overflow-hidden">
                             <div
-                              className={`h-2.5 rounded-full ${item.color}`}
+                              className={`h-2.5 rounded-full ${item.color} mm-bar-animate relative overflow-hidden mm-shimmer`}
                               style={{ width: `${item.value}%` }}
                             />
                           </div>
@@ -725,8 +734,8 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
 
               {/* Recording Tab */}
               {activeTab === 'recording' && (
-                <div className="max-w-4xl">
-                  <div className="rounded-lg bg-white p-6">
+                <div className="max-w-4xl mm-fade-tab">
+                  <div className="rounded-lg bg-white p-6 mm-card-in">
                     {selectedMeeting.hasRecording ? (
                       <RecordingPlayer meetingId={meetingId} />
                     ) : (
@@ -738,7 +747,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
             </div>
 
             {/* Right Sidebar - Bot Panel */}
-            <div className="w-full lg:w-80 flex-shrink-0">
+            <div className="w-full lg:w-80 flex-shrink-0 mm-slide-right">
               <BotPanel
                 meetingId={meetingId}
                 meetingUrl={selectedMeeting.joinUrl || selectedMeeting.onlineMeetingUrl}

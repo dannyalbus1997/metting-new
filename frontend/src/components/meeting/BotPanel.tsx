@@ -18,6 +18,7 @@ import {
   Download,
 } from 'lucide-react';
 import { botApi } from '@/services/api';
+import toast from 'react-hot-toast';
 
 interface BotPanelProps {
   meetingId: string;
@@ -50,12 +51,15 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
             setBotStatus(status.callState.status);
             if (status.callState.status === 'completed') {
               setMessage('Meeting ended. Recording processed.');
+              toast.success('Meeting recording processed successfully!');
               if (status.callState.transcript && onTranscriptReady) {
                 onTranscriptReady(status.callState.transcript);
               }
               clearInterval(pollRef.current!);
             } else if (status.callState.status === 'failed') {
-              setError(status.callState.error || 'Bot encountered an error');
+              const errMsg = status.callState.error || 'Bot encountered an error';
+              setError(errMsg);
+              toast.error(errMsg);
               clearInterval(pollRef.current!);
             }
           }
@@ -88,13 +92,14 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
 
   const handleJoinMeeting = async () => {
     if (!meetingUrl) {
-      setError('No Teams meeting URL found for this meeting. Add a join URL to use the bot.');
+      toast.error('No Teams meeting URL found. Add a join URL to use the bot.');
       return;
     }
 
     setError(null);
     setMessage(null);
     setBotStatus('joining');
+    const toastId = toast.loading('Sending bot to meeting...');
 
     try {
       const result = await botApi.joinMeeting(meetingId, meetingUrl);
@@ -102,13 +107,17 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
         setCallId(result.callState.callId);
         setBotStatus(result.callState.status);
         setMessage(result.message);
+        toast.success('Bot joined the meeting!', { id: toastId });
       } else {
         setBotStatus('idle');
         setError(result.message);
+        toast.error(result.message || 'Failed to join', { id: toastId });
       }
     } catch (err: any) {
       setBotStatus('idle');
-      setError(err.response?.data?.message || err.message || 'Failed to send bot');
+      const msg = err.response?.data?.message || err.message || 'Failed to send bot';
+      setError(msg);
+      toast.error(msg, { id: toastId });
     }
   };
 
@@ -119,8 +128,11 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
       await botApi.leaveMeeting(callId);
       setBotStatus('leaving');
       setMessage('Bot is leaving the meeting...');
+      toast.success('Bot is leaving the meeting');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to remove bot');
+      const msg = err.response?.data?.message || 'Failed to remove bot';
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -135,13 +147,14 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
       'video/mp4', 'video/webm',
     ];
     if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|m4a|mp4|webm|ogg|flac)$/i)) {
-      setError('Unsupported file format. Use MP3, WAV, M4A, MP4, WebM, OGG, or FLAC.');
+      toast.error('Unsupported file format. Use MP3, WAV, M4A, MP4, WebM, OGG, or FLAC.');
       return;
     }
 
     setIsUploading(true);
     setError(null);
     setUploadProgress(`Uploading and transcribing ${file.name}...`);
+    const toastId = toast.loading(`Transcribing ${file.name}...`);
 
     try {
       const result = await botApi.transcribeAudio(meetingId, file);
@@ -150,16 +163,20 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
 
       if (result.success) {
         setMessage(result.message);
+        toast.success('Transcription complete!', { id: toastId });
         if (result.transcript && onTranscriptReady) {
           onTranscriptReady(result.transcript);
         }
       } else {
         setError('Transcription failed');
+        toast.error('Transcription failed', { id: toastId });
       }
     } catch (err: any) {
       setIsUploading(false);
       setUploadProgress(null);
-      setError(err.response?.data?.message || 'Upload/transcription failed');
+      const msg = err.response?.data?.message || 'Upload/transcription failed';
+      setError(msg);
+      toast.error(msg, { id: toastId });
     }
 
     // Reset file input
@@ -170,12 +187,13 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
 
   const handleSubmitTranscript = async () => {
     if (!transcriptText.trim()) {
-      setError('Please paste some transcript text first');
+      toast.error('Please paste some transcript text first');
       return;
     }
 
     setIsSubmittingTranscript(true);
     setError(null);
+    const toastId = toast.loading('Saving transcript...');
 
     try {
       const result = await botApi.submitTranscript(meetingId, transcriptText.trim());
@@ -183,14 +201,18 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
         setMessage(result.message);
         setShowTranscriptInput(false);
         setTranscriptText('');
+        toast.success('Transcript saved & processing started!', { id: toastId });
         if (onTranscriptReady) {
           onTranscriptReady(transcriptText.trim());
         }
       } else {
         setError('Failed to save transcript');
+        toast.error('Failed to save transcript', { id: toastId });
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to submit transcript');
+      const msg = err.response?.data?.message || 'Failed to submit transcript';
+      setError(msg);
+      toast.error(msg, { id: toastId });
     } finally {
       setIsSubmittingTranscript(false);
     }
@@ -200,18 +222,23 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
     setIsRetryingRecording(true);
     setError(null);
     setMessage('Downloading recording and transcribing... this may take a few minutes.');
+    const toastId = toast.loading('Fetching recording & transcribing...');
 
     try {
       const result = await botApi.retryRecordingFetch(meetingId);
       if (result.success) {
         setMessage(result.message);
+        toast.success('Recording fetched & transcribed!', { id: toastId });
       } else {
         setError(result.message);
         setMessage(null);
+        toast.error(result.message || 'Recording fetch failed', { id: toastId });
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Recording retry failed');
+      const msg = err.response?.data?.message || 'Recording retry failed';
+      setError(msg);
       setMessage(null);
+      toast.error(msg, { id: toastId });
     } finally {
       setIsRetryingRecording(false);
     }
@@ -221,19 +248,24 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
     setIsRetrying(true);
     setError(null);
     setMessage(null);
+    const toastId = toast.loading('Fetching transcript from Microsoft...');
 
     try {
       const result = await botApi.retryTranscriptFetch(meetingId);
       if (result.success) {
         setMessage(result.message);
+        toast.success('Transcript fetched successfully!', { id: toastId });
         if (result.transcript && onTranscriptReady) {
           onTranscriptReady(result.transcript);
         }
       } else {
         setError(result.message);
+        toast.error(result.message || 'Transcript fetch failed', { id: toastId });
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Retry failed');
+      const msg = err.response?.data?.message || 'Retry failed';
+      setError(msg);
+      toast.error(msg, { id: toastId });
     } finally {
       setIsRetrying(false);
     }
@@ -262,7 +294,7 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
   const isActive = ['joining', 'in_meeting', 'recording', 'processing'].includes(botStatus);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mm-card-in">
       <h3 className="mb-4 text-lg font-bold text-gray-900 flex items-center gap-2">
         <Bot className="h-5 w-5 text-blue-600" />
         Meeting Bot
@@ -295,7 +327,7 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
           <button
             onClick={handleJoinMeeting}
             disabled={isUploading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors mm-btn-press mm-hover-lift"
           >
             <Mic className="h-4 w-4" />
             Send Bot to Join &amp; Record
@@ -303,7 +335,7 @@ export const BotPanel = ({ meetingId, meetingUrl, onTranscriptReady }: BotPanelP
         ) : (
           <button
             onClick={handleLeaveMeeting}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-700 transition-colors mm-btn-press"
           >
             <PhoneOff className="h-4 w-4" />
             Remove Bot from Meeting

@@ -214,3 +214,195 @@
     animation: fade-in 0.3s ease-in;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATIONS & ENHANCED UI
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Slide Up ── */
+@keyframes mm-slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mm-slide-up {
+  animation: mm-slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.mm-slide-up-1 { animation-delay: 0.05s; }
+.mm-slide-up-2 { animation-delay: 0.1s; }
+.mm-slide-up-3 { animation-delay: 0.15s; }
+.mm-slide-up-4 { animation-delay: 0.2s; }
+.mm-slide-up-5 { animation-delay: 0.25s; }
+
+/* ── Slide In from Right ── */
+@keyframes mm-slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.mm-slide-right {
+  animation: mm-slideInRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.2s;
+}
+
+/* ── Scale In ── */
+@keyframes mm-scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.mm-scale-in {
+  animation: mm-scaleIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Card Entrance ── */
+@keyframes mm-cardIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.mm-card-in {
+  animation: mm-cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Stagger for lists ── */
+.mm-stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.mm-stagger > *:nth-child(2) { animation-delay: 0.08s; }
+.mm-stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.mm-stagger > *:nth-child(4) { animation-delay: 0.16s; }
+.mm-stagger > *:nth-child(5) { animation-delay: 0.20s; }
+.mm-stagger > *:nth-child(6) { animation-delay: 0.24s; }
+.mm-stagger > *:nth-child(7) { animation-delay: 0.28s; }
+.mm-stagger > *:nth-child(8) { animation-delay: 0.32s; }
+.mm-stagger > *:nth-child(9) { animation-delay: 0.36s; }
+.mm-stagger > *:nth-child(10) { animation-delay: 0.40s; }
+
+/* ── Progress Bar Grow ── */
+@keyframes mm-barGrow {
+  from { width: 0 !important; }
+}
+.mm-bar-animate {
+  animation: mm-barGrow 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Shimmer on bars ── */
+@keyframes mm-shimmer {
+  0% { transform: translateX(-200%); }
+  100% { transform: translateX(300%); }
+}
+.mm-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: mm-shimmer 2.5s ease infinite;
+}
+
+/* ── Float animation ── */
+@keyframes mm-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.mm-float {
+  animation: mm-float 4s ease-in-out infinite;
+}
+
+/* ── Glow Pulse ── */
+@keyframes mm-glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+}
+.mm-glow-pulse {
+  animation: mm-glowPulse 2s ease-in-out infinite;
+}
+
+/* ── Score Ring animation ── */
+@keyframes mm-ringDraw {
+  from { stroke-dashoffset: 264; }
+}
+.mm-ring-animate {
+  animation: mm-ringDraw 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.3s;
+}
+
+/* ── Tab Hover Underline ── */
+@keyframes mm-tabUnderline {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* ── Bounce In for notification badges ── */
+@keyframes mm-bounceIn {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.mm-bounce-in {
+  animation: mm-bounceIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Hover lift effect ── */
+.mm-hover-lift {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+}
+.mm-hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Button Press effect ── */
+.mm-btn-press {
+  transition: transform 0.15s ease;
+}
+.mm-btn-press:active {
+  transform: scale(0.96);
+}
+
+/* ── Recording Pulse ── */
+@keyframes mm-recPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+.mm-rec-pulse {
+  animation: mm-recPulse 1.5s ease-in-out infinite;
+}
+
+/* ── Fade Tab Content ── */
+@keyframes mm-fadeTab {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mm-fade-tab {
+  animation: mm-fadeTab 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Status Dot Pulse ── */
+@keyframes mm-dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+.mm-dot-pulse {
+  animation: mm-dotPulse 2s ease-in-out infinite;
+}
+
+/* ── Skeleton Shimmer (enhanced) ── */
+@keyframes mm-skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.mm-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: mm-skeletonShimmer 1.5s ease infinite;
+  border-radius: 8px;
+}
+
+/* ── Smooth page transitions ── */
+.mm-page-enter {
+  animation: mm-slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Avatar hover scale ── */
+.mm-avatar-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.mm-avatar-hover:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
