@@ -208,12 +208,13 @@ export class MeetingService {
     if (!Types.ObjectId.isValid(meetingId)) {
       throw new BadRequestException('Invalid meeting ID');
     }
-    const meeting = await this.meetingModel.findById(meetingId).exec();
-    if (!meeting) {
+    const result = await this.meetingModel.findByIdAndUpdate(
+      meetingId,
+      { $set: { transcript } },
+    ).exec();
+    if (!result) {
       throw new NotFoundException(`Meeting with ID ${meetingId} not found`);
     }
-    meeting.transcript = transcript;
-    await meeting.save();
   }
 
   async updateWithAiResults(
@@ -305,25 +306,31 @@ export class MeetingService {
       throw new BadRequestException('Invalid meeting ID');
     }
 
-    const meeting = await this.meetingModel.findById(id).exec();
-    if (!meeting) {
+    const setFields: Record<string, any> = {
+      summary: aiResults.summary,
+      actionItems: aiResults.actionItems,
+      decisions: aiResults.decisions,
+      nextSteps: aiResults.nextSteps,
+      status: MeetingStatus.COMPLETED,
+      processedAt: new Date(),
+    };
+    if (aiResults.productivity) {
+      setFields.productivity = aiResults.productivity;
+    }
+    if (aiResults.translatedTranscript) {
+      setFields.translatedTranscript = aiResults.translatedTranscript;
+    }
+
+    const result = await this.meetingModel.findByIdAndUpdate(
+      id,
+      { $set: setFields },
+      { new: true },
+    ).exec();
+
+    if (!result) {
       throw new NotFoundException(`Meeting with ID ${id} not found`);
     }
 
-    meeting.summary = aiResults.summary;
-    meeting.actionItems = aiResults.actionItems;
-    meeting.decisions = aiResults.decisions;
-    meeting.nextSteps = aiResults.nextSteps;
-    if (aiResults.productivity) {
-      (meeting as any).productivity = aiResults.productivity;
-    }
-    if (aiResults.translatedTranscript) {
-      (meeting as any).translatedTranscript = aiResults.translatedTranscript;
-    }
-    meeting.status = MeetingStatus.COMPLETED;
-    meeting.processedAt = new Date();
-
-    await meeting.save();
     this.logger.log(`AI results saved for meeting ${id} (productivity: ${aiResults.productivity?.score ?? 'N/A'}%, translated: ${aiResults.translatedTranscript ? 'yes' : 'no'})`);
   }
 
@@ -335,13 +342,14 @@ export class MeetingService {
     meetingId: string,
     meta: { organizerId: string; onlineMeetingId: string; recordingId: string },
   ): Promise<void> {
-    const meeting = await this.meetingModel.findById(meetingId).exec();
-    if (!meeting) {
+    const result = await this.meetingModel.findByIdAndUpdate(
+      meetingId,
+      { $set: { recordingMeta: meta } },
+    ).exec();
+    if (!result) {
       this.logger.warn(`Cannot save recording meta — meeting ${meetingId} not found`);
       return;
     }
-    meeting.recordingMeta = meta;
-    await meeting.save();
     this.logger.log(`Recording meta saved for meeting ${meetingId}`);
   }
 
@@ -401,32 +409,45 @@ export class MeetingService {
           }),
         ]);
 
-        meeting.summary = aiResults.summary;
-        meeting.actionItems = aiResults.actionItems.map((item) => ({
-          ...item,
-          completed: false,
-        }));
-        meeting.decisions = aiResults.decisions;
-        meeting.nextSteps = aiResults.nextSteps;
+        // Use atomic findOneAndUpdate to avoid VersionError from concurrent modifications
+        const updateData: Record<string, any> = {
+          summary: aiResults.summary,
+          actionItems: aiResults.actionItems.map((item) => ({
+            ...item,
+            completed: false,
+          })),
+          decisions: aiResults.decisions,
+          nextSteps: aiResults.nextSteps,
+          status: MeetingStatus.COMPLETED,
+          processedAt: new Date(),
+          $unset: { errorMessage: 1 },
+        };
         if (aiResults.productivity) {
-          (meeting as any).productivity = aiResults.productivity;
+          updateData.productivity = aiResults.productivity;
         }
         if (translatedTranscript) {
-          (meeting as any).translatedTranscript = translatedTranscript;
+          updateData.translatedTranscript = translatedTranscript;
         }
-        meeting.status = MeetingStatus.COMPLETED;
-        meeting.processedAt = new Date();
-        meeting.errorMessage = undefined as any;
 
-        const updatedMeeting = await meeting.save();
+        const { $unset, ...setFields } = updateData;
+        const updatedMeeting = await this.meetingModel.findByIdAndUpdate(
+          meetingId,
+          { $set: setFields, $unset: $unset || {} },
+          { new: true },
+        ).exec();
+
         this.logger.log(`Successfully processed meeting ${meetingId} (productivity: ${aiResults.productivity?.score ?? 'N/A'}%)`);
 
-        return this.mapToResponseDto(updatedMeeting);
+        return this.mapToResponseDto(updatedMeeting!);
       } catch (aiError: any) {
         this.logger.error(`AI processing failed for meeting ${meetingId}:`, aiError);
-        meeting.status = MeetingStatus.FAILED;
-        meeting.errorMessage = aiError.message || 'AI processing failed';
-        await meeting.save();
+        // Use atomic update for error status too
+        await this.meetingModel.findByIdAndUpdate(meetingId, {
+          $set: {
+            status: MeetingStatus.FAILED,
+            errorMessage: aiError.message || 'AI processing failed',
+          },
+        }).exec();
 
         throw new BadRequestException(
           `Failed to process meeting: ${aiError.message || 'Unknown error'}`,
