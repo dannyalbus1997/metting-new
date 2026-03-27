@@ -146,7 +146,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           recipients: {
             to: [
               {
-                address: user.email,
+                address: "talha.wajdan@consultancyoutfit.co.uk",
                 displayName: user.name || user.email,
               },
             ],
@@ -309,11 +309,11 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
 <html>
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f1f5f9;">
-  <div style="max-width: 640px; margin: 0 auto; padding: 24px;">
+  <div style="max-width: 640px; margin: 0 auto; padding: 24px; background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.06);">
     <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border-radius: 12px 12px 0 0; padding: 32px 24px; text-align: center;">
-      <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 700;">Meeting Summary</h1>
-      <p style="margin: 8px 0 0; color: #bfdbfe; font-size: 14px;">${this.esc(meeting.title)}</p>
-      <p style="margin: 4px 0 0; color: #93bbfd; font-size: 13px;">${date}</p>
+      <h1 style="margin: 0; color: ##1e293b; font-size: 22px; font-weight: 700;">Meeting Summary</h1>
+      <p style="margin: 8px 0 0; color: ##1e293b; font-size: 14px;">${this.esc(meeting.title)}</p>
+      <p style="margin: 4px 0 0; color: #1e293b; font-size: 13px;">${date}</p>
     </div>
     <div style="background: #ffffff; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
       <div style="margin-bottom: 24px;">
