@@ -150,6 +150,19 @@ export class Meeting {
   @Prop({ default: false })
   emailSent: boolean;
 
+  @Prop({
+    type: String,
+    enum: ['idle', 'fetching', 'transcribing', 'done', 'failed'],
+    default: 'idle',
+  })
+  transcriptFetchStatus: string;
+
+  @Prop({ default: null })
+  transcriptFetchError: string;
+
+  @Prop({ default: null })
+  lastTranscriptFetchAt: Date;
+
   @Exclude()
   __v: number;
 }

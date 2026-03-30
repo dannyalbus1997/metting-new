@@ -17,7 +17,11 @@ import {
   X,
   Download,
 } from 'lucide-react';
-import { botApi } from '@/services/api';
+import { transcriptApi } from '@/services/api';
+
+// DEPRECATED: This component has been replaced by TranscriptStatus.
+// Kept for reference only. All botApi calls below will not work.
+const botApi: any = {};
 import toast from 'react-hot-toast';
 
 interface BotPanelProps {

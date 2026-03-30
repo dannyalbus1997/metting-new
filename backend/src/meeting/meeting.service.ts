@@ -551,6 +551,9 @@ export class MeetingService {
       processedAt: obj.processedAt,
       recordingMeta: obj.recordingMeta || null,
       productivity: obj.productivity || null,
+      transcriptFetchStatus: obj.transcriptFetchStatus || 'idle',
+      transcriptFetchError: obj.transcriptFetchError || null,
+      lastTranscriptFetchAt: obj.lastTranscriptFetchAt || null,
       createdAt: obj.createdAt || new Date(),
       updatedAt: obj.updatedAt || new Date(),
     };

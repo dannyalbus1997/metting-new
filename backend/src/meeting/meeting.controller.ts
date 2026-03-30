@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   Query,
+  Res,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -14,6 +15,7 @@ import {
   Inject,
   Logger,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -27,9 +29,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MeetingService } from './meeting.service';
+import { TranscriptCronService } from './transcript-cron.service';
 import { AiService } from '../ai/ai.service';
 import { MicrosoftService } from '../microsoft/microsoft.service';
 import { UserService } from '../user/user.service';
+import { BotService } from '../bot/bot.service';
 import { Meeting, MeetingDocument, MeetingStatus } from './schemas/meeting.schema';
 import {
   CreateMeetingDto,
@@ -56,8 +60,10 @@ export class MeetingController {
 
   constructor(
     private readonly meetingService: MeetingService,
+    private readonly transcriptCronService: TranscriptCronService,
     private readonly microsoftService: MicrosoftService,
     private readonly userService: UserService,
+    private readonly botService: BotService,
     @Inject('AI_SERVICE') private readonly aiService: AiService,
     @InjectModel(Meeting.name)
     private readonly meetingModel: Model<MeetingDocument>,
@@ -325,6 +331,80 @@ export class MeetingController {
     this.logger.log(`Translation saved for meeting ${id}`);
 
     return { translatedTranscript };
+  }
+
+  @Post(':id/fetch-transcript')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Manually trigger transcript fetch from Microsoft Graph' })
+  @ApiParam({ name: 'id', type: String })
+  async fetchTranscript(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+  ): Promise<{ success: boolean; message: string }> {
+    this.logger.log(`Manual transcript fetch triggered for meeting ${id}`);
+    // Verify ownership
+    await this.meetingService.findById(id, req.user.userId);
+    return this.transcriptCronService.fetchTranscriptForMeeting(id);
+  }
+
+  @Get(':id/transcript-status')
+  @ApiOperation({ summary: 'Get transcript fetch status for a meeting' })
+  @ApiParam({ name: 'id', type: String })
+  async getTranscriptStatus(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+  ): Promise<{
+    status: string;
+    error: string | null;
+    lastFetchAt: Date | null;
+    hasTranscript: boolean;
+    hasRecording: boolean;
+  }> {
+    const meeting = await this.meetingModel.findById(id).exec();
+    if (!meeting) {
+      throw new NotFoundException(`Meeting with ID ${id} not found`);
+    }
+    return {
+      status: meeting.transcriptFetchStatus || 'idle',
+      error: meeting.transcriptFetchError || null,
+      lastFetchAt: meeting.lastTranscriptFetchAt || null,
+      hasTranscript: !!meeting.transcript,
+      hasRecording: !!meeting.recordingMeta,
+    };
+  }
+
+  @Get(':id/recording-stream')
+  @ApiOperation({ summary: 'Stream meeting recording from Microsoft Graph' })
+  @ApiParam({ name: 'id', type: String })
+  async streamRecording(
+    @Param('id') id: string,
+    @Res() res: any,
+  ): Promise<void> {
+    const meta = await this.meetingService.getRecordingMeta(id);
+    if (!meta) {
+      throw new NotFoundException('No recording available for this meeting');
+    }
+
+    const streamResult = await this.botService.getRecordingStream(
+      meta.organizerId,
+      meta.onlineMeetingId,
+      meta.recordingId,
+    );
+
+    if (!streamResult) {
+      throw new NotFoundException(
+        'Recording could not be fetched from Microsoft Graph. It may have expired.',
+      );
+    }
+
+    res.set({
+      'Content-Type': 'video/mp4',
+      ...(streamResult.contentLength ? { 'Content-Length': streamResult.contentLength } : {}),
+      'Content-Disposition': `inline; filename="recording_${id}.mp4"`,
+      'Cache-Control': 'no-cache',
+    });
+
+    streamResult.stream.pipe(res);
   }
 
   @Delete(':id')

@@ -86,6 +86,8 @@ export interface Meeting {
   aiProcessingStatus: 'pending' | 'processing' | 'completed' | 'failed';
   recordingUrl?: string;
   hasRecording?: boolean;
+  transcriptFetchStatus?: string;
+  transcriptFetchError?: string | null;
   productivity?: {
     score: number;
     label: string;

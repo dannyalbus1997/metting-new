@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { BotController } from './bot.controller';
 import { BotService } from './bot.service';
@@ -9,7 +9,7 @@ import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
-    MeetingModule,
+    forwardRef(() => MeetingModule),
     AiModule,
     UserModule,
     MulterModule.register({

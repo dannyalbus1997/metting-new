@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { BotPanel } from '@/components/meeting/BotPanel';
+import { TranscriptStatus } from '@/components/meeting/TranscriptStatus';
 import { meetingsApi } from '@/services/api';
 import toast from 'react-hot-toast';
 
@@ -38,7 +38,7 @@ const RecordingPlayer = ({ meetingId }: { meetingId: string }) => {
     try {
       const token = localStorage.getItem('accessToken');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
-      const response = await fetch(`${apiUrl}/bot/recording-stream/${meetingId}`, {
+      const response = await fetch(`${apiUrl}/meetings/${meetingId}/recording-stream`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
@@ -746,13 +746,14 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
               )}
             </div>
 
-            {/* Right Sidebar - Bot Panel */}
+            {/* Right Sidebar - Transcript Status */}
             <div className="w-full lg:w-80 flex-shrink-0 mm-slide-right">
-              <BotPanel
+              <TranscriptStatus
                 meetingId={meetingId}
-                meetingUrl={selectedMeeting.joinUrl || selectedMeeting.onlineMeetingUrl}
-                onTranscriptReady={(transcript) => {
-                  // Refresh meeting data to show the new transcript
+                hasTranscript={!!selectedMeeting.transcript}
+                hasRecording={!!selectedMeeting.hasRecording}
+                meetingStatus={selectedMeeting.status || 'pending'}
+                onTranscriptReady={() => {
                   dispatch(fetchMeetingById(meetingId) as any);
                   setActiveTab('transcript');
                 }}

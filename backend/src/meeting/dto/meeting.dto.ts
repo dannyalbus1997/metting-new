@@ -216,6 +216,15 @@ export class MeetingResponseDto {
     improvements: string[];
   } | null;
 
+  @ApiPropertyOptional()
+  transcriptFetchStatus?: string;
+
+  @ApiPropertyOptional()
+  transcriptFetchError?: string | null;
+
+  @ApiPropertyOptional({ type: Date })
+  lastTranscriptFetchAt?: Date | null;
+
   @ApiProperty({ type: Date })
   createdAt: Date;
 

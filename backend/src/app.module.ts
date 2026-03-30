@@ -6,7 +6,6 @@ import { UserModule } from './user/user.module';
 import { MeetingModule } from './meeting/meeting.module';
 import { MicrosoftModule } from './microsoft/microsoft.module';
 import { AiModule } from './ai/ai.module';
-import { BotModule } from './bot/bot.module';
 import { EmailModule } from './email/email.module';
 
 @Module({
@@ -35,7 +34,6 @@ import { EmailModule } from './email/email.module';
     MeetingModule,
     MicrosoftModule,
     AiModule,
-    BotModule,
     EmailModule,
   ],
 })

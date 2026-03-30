@@ -278,6 +278,8 @@ const normalizeMeeting = (raw: any): Meeting => {
     hasRecording: !!raw.recordingMeta,
     translatedTranscript: raw.translatedTranscript || null,
     productivity: raw.productivity || null,
+    transcriptFetchStatus: raw.transcriptFetchStatus || 'idle',
+    transcriptFetchError: raw.transcriptFetchError || null,
   };
 };
 
@@ -366,81 +368,35 @@ export const meetingsApi = {
 };
 
 /**
- * Bot API methods
+ * Transcript API methods
  */
-export const botApi = {
+export const transcriptApi = {
   /**
-   * Send bot to join a Teams meeting
+   * Get transcript fetch status for a meeting
    */
-  joinMeeting: async (
-    meetingId: string,
-    meetingUrl: string,
-  ): Promise<any> => {
-    const response = await axiosInstance.post('/bot/join', {
-      meetingId,
-      meetingUrl,
-    });
+  getStatus: async (meetingId: string): Promise<{
+    status: string;
+    error: string | null;
+    lastFetchAt: string | null;
+    hasTranscript: boolean;
+    hasRecording: boolean;
+  }> => {
+    const response = await axiosInstance.get(`/meetings/${meetingId}/transcript-status`);
     return response.data;
   },
 
   /**
-   * Remove bot from a meeting
+   * Manually trigger transcript fetch from Microsoft Graph
    */
-  leaveMeeting: async (callId: string): Promise<any> => {
-    const response = await axiosInstance.post(`/bot/leave/${callId}`);
-    return response.data;
-  },
-
-  /**
-   * Get bot status for a meeting
-   */
-  getStatus: async (meetingId: string): Promise<any> => {
-    const response = await axiosInstance.get(`/bot/status/${meetingId}`);
-    return response.data;
-  },
-
-  /**
-   * Upload and transcribe an audio file for a meeting
-   */
-  transcribeAudio: async (meetingId: string, file: File): Promise<any> => {
-    const formData = new FormData();
-    formData.append('audio', file);
+  fetchTranscript: async (meetingId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> => {
     const response = await axiosInstance.post(
-      `/bot/transcribe/${meetingId}`,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 300000, // 5 min for large files
-      },
+      `/meetings/${meetingId}/fetch-transcript`,
+      {},
+      { timeout: 300000 },
     );
-    return response.data;
-  },
-
-  /**
-   * Submit transcript text manually for a meeting
-   */
-  submitTranscript: async (meetingId: string, transcript: string): Promise<any> => {
-    const response = await axiosInstance.post(`/bot/transcript/${meetingId}`, {
-      transcript,
-    });
-    return response.data;
-  },
-
-  /**
-   * Retry fetching transcript from Microsoft Graph
-   */
-  retryTranscriptFetch: async (meetingId: string): Promise<any> => {
-    const response = await axiosInstance.post(`/bot/retry-transcript/${meetingId}`);
-    return response.data;
-  },
-
-  /**
-   * Retry downloading meeting recording and transcribing with Whisper
-   */
-  retryRecordingFetch: async (meetingId: string): Promise<any> => {
-    const response = await axiosInstance.post(`/bot/retry-recording/${meetingId}`, {}, {
-      timeout: 300000, // 5 min — recording download + transcription can take a while
-    });
     return response.data;
   },
 };
