@@ -152,12 +152,13 @@ const DashboardPage = () => {
             <button
               onClick={handleSync}
               disabled={isSyncing || loading}
-              className="btn btn-secondary gap-2 whitespace-nowrap"
+              className="btn gap-2 whitespace-nowrap text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)' }}
             >
               <RefreshCw
                 className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
               />
-              {isSyncing ? 'Syncing...' : 'Sync'}
+              {isSyncing ? 'Syncing...' : 'Sync Calendar'}
             </button>
           </div>
         </div>
@@ -206,7 +207,8 @@ const DashboardPage = () => {
               </p>
               <button
                 onClick={handleSync}
-                className="btn btn-primary gap-2"
+                className="btn gap-2 text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)' }}
               >
                 <RefreshCw className="h-4 w-4" />
                 Sync Meetings

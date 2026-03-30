@@ -44,7 +44,7 @@ export const MeetingCard = ({ meeting }: MeetingCardProps) => {
   };
 
   return (
-    <div className="group card-hover flex flex-col overflow-hidden p-5 transition-smooth">
+    <div className="group card-hover flex h-full flex-col overflow-hidden p-5 transition-smooth">
       {/* Header */}
       <div className="mb-4 flex items-start justify-between gap-3">
         <h3 className="flex-1 text-lg font-bold text-gray-900 truncate group-hover:text-blue-600">
@@ -65,7 +65,7 @@ export const MeetingCard = ({ meeting }: MeetingCardProps) => {
       </div>
 
       {/* Participants */}
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-4 mt-auto flex items-center gap-2">
         <div className="flex -space-x-2">
           {displayParticipants.map((participant: any, idx: number) => {
             const displayName = participant.displayName || participant.name || participant.email || '?';
@@ -94,16 +94,25 @@ export const MeetingCard = ({ meeting }: MeetingCardProps) => {
       </div>
 
       {/* Action Items Count */}
-      {meeting.actionItems && meeting.actionItems.length > 0 && (
-        <div className="border-t border-gray-200 pt-4">
-          <div className="flex items-center gap-2 text-sm">
-            <CheckCircle className="h-4 w-4 text-blue-600" />
-            <span className="font-semibold text-gray-900">
-              {meeting.actionItems.length} action items
-            </span>
-          </div>
+      <div className="border-t border-gray-200 pt-4">
+        <div className="flex items-center gap-2 text-sm">
+          {meeting.actionItems && meeting.actionItems.length > 0 ? (
+            <>
+              <CheckCircle className="h-4 w-4 text-blue-600" />
+              <span className="font-semibold text-gray-900">
+                {meeting.actionItems.length} action items
+              </span>
+            </>
+          ) : (
+            <>
+              <Clock className="h-4 w-4 text-gray-400" />
+              <span className="font-medium text-gray-400">
+                No action items
+              </span>
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

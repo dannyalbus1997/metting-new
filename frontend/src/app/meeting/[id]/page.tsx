@@ -441,7 +441,8 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
             <button
               onClick={handleReprocess}
               disabled={isProcessing}
-              className="btn btn-primary gap-2 mm-btn-press"
+              className="btn gap-2 mm-btn-press text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)' }}
             >
               {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
               Re-run AI Processing

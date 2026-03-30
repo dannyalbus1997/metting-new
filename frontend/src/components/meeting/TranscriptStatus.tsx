@@ -257,15 +257,11 @@ export const TranscriptStatus = ({
             <button
               onClick={handleFetchNow}
               disabled={isFetching || fetchStatus === 'fetching' || fetchStatus === 'transcribing'}
-              className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 mm-btn-press"
+              className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 mm-btn-press text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               style={{
                 background: isFetching
-                  ? 'rgba(124,58,237,0.08)'
-                  : 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(56,189,248,0.08))',
-                border: '1.5px solid rgba(124,58,237,0.2)',
-                color: '#7c3aed',
-                opacity: isFetching || fetchStatus === 'fetching' || fetchStatus === 'transcribing' ? 0.6 : 1,
-                cursor: isFetching || fetchStatus === 'fetching' || fetchStatus === 'transcribing' ? 'not-allowed' : 'pointer',
+                  ? 'linear-gradient(135deg, #818cf8, #a78bfa, #c084fc)'
+                  : 'linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)',
               }}
             >
               {isFetching ? (
