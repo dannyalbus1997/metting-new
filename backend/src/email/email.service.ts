@@ -326,11 +326,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       ${actionItemsHtml}
       ${decisionsHtml}
       ${nextStepsHtml}
-      <div style="text-align: center; margin: 32px 0 16px;">
-        <a href="${meetingUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 600;">
-          View Full Details
-        </a>
-      </div>
+      
     </div>
     <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 12px;">
       <p style="margin: 0;">Sent automatically by Sumsy</p>
