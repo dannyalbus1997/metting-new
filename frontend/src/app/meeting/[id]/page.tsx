@@ -142,7 +142,7 @@ const MeetingDetailPage = () => {
   }, [selectedMeeting?.translatedTranscript]);
 
   // Auto-poll while AI processing is pending or in progress
-  // This ensures the page refreshes when the bot finishes background processing
+  // This ensures the page refreshes when background processing completes
   useEffect(() => {
     if (!isAuthenticated || !meetingId) return;
 

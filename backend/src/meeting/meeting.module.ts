@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Meeting, MeetingSchema } from './schemas/meeting.schema';
 import { MeetingService } from './meeting.service';
@@ -17,7 +17,7 @@ import { BotModule } from '../bot/bot.module';
     MicrosoftModule,
     UserModule,
     AiModule,
-    forwardRef(() => BotModule),
+    BotModule,
   ],
   controllers: [MeetingController],
   providers: [
