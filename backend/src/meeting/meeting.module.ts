@@ -4,6 +4,7 @@ import { Meeting, MeetingSchema } from './schemas/meeting.schema';
 import { MeetingService } from './meeting.service';
 import { MeetingController } from './meeting.controller';
 import { TranscriptCronService } from './transcript-cron.service';
+import { MeetingSyncCronService } from './meeting-sync-cron.service';
 import { MicrosoftModule } from '../microsoft/microsoft.module';
 import { UserModule } from '../user/user.module';
 import { AiModule } from '../ai/ai.module';
@@ -22,6 +23,7 @@ import { BotModule } from '../bot/bot.module';
   providers: [
     MeetingService,
     TranscriptCronService,
+    MeetingSyncCronService,
     {
       provide: 'AI_SERVICE',
       useExisting: AiService,

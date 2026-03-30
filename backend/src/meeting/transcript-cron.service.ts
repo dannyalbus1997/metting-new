@@ -55,7 +55,7 @@ export class TranscriptCronService implements OnModuleInit, OnModuleDestroy {
     private readonly transcriptionService: TranscriptionService,
   ) {
     this.cronIntervalMs = Number(
-      this.configService.get<string>('TRANSCRIPT_CRON_INTERVAL_MS', '120000'),
+      this.configService.get<string>('TRANSCRIPT_CRON_INTERVAL_MS', '60000'),
     );
     this.clientId = this.configService.get<string>('MICROSOFT_CLIENT_ID', '');
     this.clientSecret = this.configService.get<string>('MICROSOFT_CLIENT_SECRET', '');
