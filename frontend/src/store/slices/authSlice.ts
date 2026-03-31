@@ -85,12 +85,13 @@ export const refreshAuth = createAsyncThunk(
 
 /**
  * Async thunk: Logout user
+ * @param complete - if true, clears Microsoft tokens from DB (disables background services)
  */
 export const logout = createAsyncThunk(
   'auth/logout',
-  async (_, { rejectWithValue }) => {
+  async (complete: boolean = false, { rejectWithValue }) => {
     try {
-      await authApi.logout();
+      await authApi.logout(complete);
     } catch (error) {
       return rejectWithValue((error as Error).message || 'Logout failed');
     }

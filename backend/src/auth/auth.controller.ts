@@ -157,6 +157,30 @@ export class AuthController {
   }
 
   /**
+   * Logs out the current user
+   * If complete=true, also clears Microsoft tokens from DB (disables cron jobs)
+   */
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout current user' })
+  @ApiOkResponse({ description: 'Logged out successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing token' })
+  async logout(
+    @CurrentUser() user: JwtPayload,
+    @Body() body: { complete?: boolean },
+  ) {
+    if (body.complete) {
+      await this.authService.completeLogout(user.userId);
+      this.logger.log(`User ${user.email} performed complete logout (Microsoft tokens cleared)`);
+      return { message: 'Complete logout successful — background services disabled' };
+    }
+
+    this.logger.log(`User ${user.email} logged out (app only)`);
+    return { message: 'Logged out successfully' };
+  }
+
+  /**
    * Gets the current authenticated user
    * Protected endpoint - requires valid JWT
    */

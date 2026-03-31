@@ -229,6 +229,14 @@ export class AuthService {
   }
 
   /**
+   * Complete logout — clears Microsoft tokens from DB, disabling cron-based services
+   */
+  async completeLogout(userId: string): Promise<void> {
+    await this.userService.updateTokens(userId, '', '');
+    this.logger.log(`Cleared Microsoft tokens for user ${userId}`);
+  }
+
+  /**
    * Builds Microsoft OAuth authorization URL
    */
   getMicrosoftAuthUrl(redirectUri: string): string {

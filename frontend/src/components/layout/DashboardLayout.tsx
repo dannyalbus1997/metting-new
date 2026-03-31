@@ -12,6 +12,8 @@ import {
   Calendar,
   BarChart3,
   Settings,
+  Monitor,
+  ShieldOff,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -23,9 +25,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = async () => {
-    await dispatch(logout() as any);
+  const handleLogout = async (complete: boolean) => {
+    setShowLogoutModal(false);
+    await dispatch(logout(complete) as any);
     router.replace('/login');
   };
 
@@ -102,7 +106,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   <p className="truncate text-xs text-gray-600">{user.email}</p>
                 </div>
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setShowLogoutModal(true)}
                   className="btn btn-ghost w-full gap-2 justify-start"
                 >
                   <LogOut className="h-4 w-4" />
@@ -143,6 +147,75 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Content Area */}
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          onClick={() => setShowLogoutModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Sign Out</h3>
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="rounded-lg p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-sm text-gray-600">
+                How would you like to sign out?
+              </p>
+
+              {/* App-only logout */}
+              <button
+                onClick={() => handleLogout(false)}
+                className="w-full flex items-start gap-3 rounded-lg border border-gray-200 p-4 text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              >
+                <Monitor className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">App Only</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Sign out of this device. Background services (email summaries, transcript fetching) will continue working.
+                  </p>
+                </div>
+              </button>
+
+              {/* Complete logout */}
+              <button
+                onClick={() => handleLogout(true)}
+                className="w-full flex items-start gap-3 rounded-lg border border-gray-200 p-4 text-left hover:border-red-300 hover:bg-red-50 transition-colors"
+              >
+                <ShieldOff className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Complete Sign Out</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Sign out and disconnect Microsoft account. Background services will stop until you sign in again.
+                  </p>
+                </div>
+              </button>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-3 border-t border-gray-100">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="w-full text-sm text-gray-500 hover:text-gray-700 py-2 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

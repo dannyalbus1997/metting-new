@@ -205,10 +205,11 @@ export const authApi = {
 
   /**
    * Logout (server-side)
+   * @param complete - if true, clears Microsoft tokens from DB (disables background services)
    */
-  logout: async (): Promise<void> => {
+  logout: async (complete = false): Promise<void> => {
     try {
-      await axiosInstance.post('/auth/logout');
+      await axiosInstance.post('/auth/logout', { complete });
     } finally {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
