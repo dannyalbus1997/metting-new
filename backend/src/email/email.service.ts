@@ -8,6 +8,8 @@ import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { EmailClient } from "@azure/communication-email";
+import * as ejs from "ejs";
+import * as path from "path";
 import {
   Meeting,
   MeetingDocument,
@@ -27,6 +29,12 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   private readonly senderEmail: string;
   private readonly enabled: boolean;
 
+  private readonly templatePath = path.join(
+    __dirname,
+    "templates",
+    "meeting-summary.ejs",
+  );
+
   constructor(
     private readonly configService: ConfigService,
     @InjectModel(Meeting.name)
@@ -38,7 +46,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       this.configService.get<string>("EMAIL_CRON_INTERVAL_MS", "60000"),
     );
     this.appUrl = this.configService.get<string>(
-      "APP_URL",
+      "FRONTEND_URL",
       "http://localhost:3000",
     );
     this.senderEmail = this.configService.get<string>("ECS_SENDER_EMAIL", "");
@@ -134,7 +142,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           continue;
         }
 
-        const html = this.buildEmailHtml(meeting);
+        const html = await this.buildEmailHtml(meeting);
 
         const message = {
           senderAddress: this.senderEmail,
@@ -175,9 +183,9 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Build a professional HTML email template.
+   * Build HTML email from EJS template.
    */
-  private buildEmailHtml(meeting: MeetingDocument): string {
+  private async buildEmailHtml(meeting: MeetingDocument): Promise<string> {
     const meetingUrl = `${this.appUrl}/meeting/${meeting._id}`;
     const startDate = new Date(meeting.startTime);
     const endDate = meeting.endTime ? new Date(meeting.endTime) : null;
@@ -202,435 +210,30 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     const durationMin = durationMs > 0 ? Math.round(durationMs / 60000) : null;
 
     const participants = meeting.participants || [];
-    const participantCount = participants.length;
     const actionItems = meeting.actionItems || [];
     const decisions = meeting.decisions || [];
     const nextSteps = meeting.nextSteps || [];
-    const prod = (meeting as any).productivity;
-
-    // Build sections
-    const statsSection = this.buildStatsSection(
-      durationMin,
-      participantCount,
-      actionItems.length,
-      decisions.length,
-    );
-    const participantsSection = this.buildParticipantsSection(participants);
-    const summarySection = this.buildSummarySection(meeting.summary);
-    const productivitySection = this.buildProductivitySection(prod);
-    const actionItemsSection = this.buildActionItemsSection(actionItems);
-    const decisionsSection = this.buildDecisionsSection(decisions);
-    const nextStepsSection = this.buildNextStepsSection(nextSteps);
+    const productivity = (meeting as any).productivity;
 
     const timeDisplay =
       dateStr +
       (timeStr ? " &bull; " + timeStr : "") +
       (endTimeStr ? " - " + endTimeStr : "");
 
-    return [
-      "<!DOCTYPE html>",
-      '<html><head><meta charset="utf-8" />',
-      '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
-      "<title>Meeting Summary</title></head>",
-      "<body style=\"margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f1f5f9;-webkit-font-smoothing:antialiased;\">",
-      '<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:32px 16px;"><tr><td align="center">',
-      '<table width="640" cellpadding="0" cellspacing="0" style="max-width:640px;width:100%;background-color:#ffffff;border-radius:20px;overflow:hidden;">',
-      // Header — solid bg-color fallback + gradient for modern clients
-      '<tr><td style="background-color:#7c3aed;background-image:linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#a855f7 100%);padding:40px 32px 48px;text-align:center;">',
-      '<div style="margin-bottom:20px;"><span style="display:inline-block;background-color:rgba(255,255,255,0.2);padding:8px 20px;border-radius:30px;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1.5px;text-transform:uppercase;">&#9889; Sumsy</span></div>',
-      '<h1 style="margin:0 0 8px;color:#ffffff;font-size:26px;font-weight:800;letter-spacing:-0.3px;line-height:1.2;">Meeting Summary</h1>',
-      '<p style="margin:0 0 4px;color:#e8e0ff;font-size:16px;font-weight:500;">' +
-        this.esc(meeting.title) +
-        "</p>",
-      '<p style="margin:0;color:#c4b5fd;font-size:13px;">' +
-        timeDisplay +
-        "</p>",
-      "</td></tr>",
-      // Stats
-      '<tr><td style="padding:0 24px;">',
-      '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:-24px;">',
-      "<tr>" + statsSection + "</tr>",
-      "</table></td></tr>",
-      // Participants
-      participantsSection,
-      // Main content
-      '<tr><td style="padding:28px 32px;">',
-      summarySection,
-      productivitySection,
-      actionItemsSection,
-      decisionsSection,
-      nextStepsSection,
-      // CTA — solid fallback + gradient
-      '<div style="text-align:center;margin:36px 0 12px;">',
-      '<a href="' +
-        meetingUrl +
-        '" style="display:inline-block;padding:14px 40px;background-color:#7c3aed;background-image:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7);color:#ffffff;text-decoration:none;border-radius:12px;font-size:15px;font-weight:700;letter-spacing:0.3px;">View Full Details &#8594;</a>',
-      "</div>",
-      "</td></tr>",
-      // Divider
-      '<tr><td style="padding:0 32px;"><div style="height:1px;background-color:#e2e8f0;"></div></td></tr>',
-      // Footer
-      '<tr><td style="padding:24px 32px 28px;text-align:center;">',
-      '<div style="margin-bottom:8px;"><span style="font-size:13px;font-weight:700;color:#6366f1;letter-spacing:0.5px;">&#9889; Sumsy</span></div>',
-      '<p style="margin:0 0 4px;color:#94a3b8;font-size:12px;line-height:1.6;">AI-powered meeting intelligence for your team</p>',
-      '<p style="margin:0;color:#cbd5e1;font-size:11px;">This email was generated automatically. Do not reply.</p>',
-      "</td></tr>",
-      "</table></td></tr></table>",
-      "</body></html>",
-    ].join("\n");
-  }
-
-  private buildStatsSection(
-    durationMin: number | null,
-    participantCount: number,
-    actionCount: number,
-    decisionCount: number,
-  ): string {
-    const stats = [
-      {
-        label: "Duration",
-        value: durationMin ? durationMin + "m" : "--",
-        icon: "&#9202;",
-        color: "#6366f1",
-        bgColor: "#eef2ff",
-        bgImage: "linear-gradient(135deg,#eef2ff,#e0e7ff)",
-      },
-      {
-        label: "Participants",
-        value: String(participantCount),
-        icon: "&#128101;",
-        color: "#8b5cf6",
-        bgColor: "#f5f3ff",
-        bgImage: "linear-gradient(135deg,#f5f3ff,#ede9fe)",
-      },
-      {
-        label: "Action Items",
-        value: String(actionCount),
-        icon: "&#9989;",
-        color: "#a855f7",
-        bgColor: "#faf5ff",
-        bgImage: "linear-gradient(135deg,#faf5ff,#f3e8ff)",
-      },
-      {
-        label: "Decisions",
-        value: String(decisionCount),
-        icon: "&#128161;",
-        color: "#6366f1",
-        bgColor: "#eef2ff",
-        bgImage: "linear-gradient(135deg,#eef2ff,#e8e0ff)",
-      },
-    ];
-
-    return stats
-      .map(
-        (s) =>
-          '<td style="width:25%;padding:0 6px;">' +
-          '<div style="background-color:' +
-          s.bgColor +
-          ";background-image:" +
-          s.bgImage +
-          ';border-radius:12px;padding:16px 8px;text-align:center;border:1px solid #e0e7ff;">' +
-          '<div style="font-size:20px;margin-bottom:4px;">' +
-          s.icon +
-          "</div>" +
-          '<div style="font-size:22px;font-weight:700;color:' +
-          s.color +
-          ';">' +
-          s.value +
-          "</div>" +
-          '<div style="font-size:11px;color:#94a3b8;margin-top:2px;text-transform:uppercase;letter-spacing:0.5px;">' +
-          s.label +
-          "</div>" +
-          "</div></td>",
-      )
-      .join("");
-  }
-
-  private buildParticipantsSection(participants: any[]): string {
-    if (participants.length === 0) return "";
-
-    const display = participants.slice(0, 6);
-    const avatars = display
-      .map((p: any) => {
-        const name = p.displayName || p.name || p.email || "?";
-        const initials = name
-          .split(" ")
-          .map((n: string) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2);
-        return (
-          '<td style="padding:0 2px;">' +
-          '<div style="width:36px;height:36px;border-radius:50%;background-color:#7c3aed;background-image:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-size:12px;font-weight:700;line-height:36px;text-align:center;border:2px solid #fff;">' +
-          initials +
-          "</div></td>"
-        );
-      })
-      .join("");
-
-    const overflow =
-      participants.length > 6
-        ? '<td style="padding:0 2px;"><div style="width:36px;height:36px;border-radius:50%;background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;line-height:36px;text-align:center;">+' +
-          (participants.length - 6) +
-          "</div></td>"
-        : "";
-
-    return [
-      '<tr><td style="padding:20px 32px 0;">',
-      '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:10px;">Participants</div>',
-      '<table cellpadding="0" cellspacing="0"><tr>' +
-        avatars +
-        overflow +
-        "</tr></table>",
-      "</td></tr>",
-    ].join("\n");
-  }
-
-  private buildSummarySection(summary: string | undefined): string {
-    return [
-      '<div style="margin-bottom:28px;">',
-      '<div style="margin-bottom:14px;">',
-      '<span style="font-size:18px;margin-right:8px;">&#128221;</span>',
-      '<span style="font-size:17px;font-weight:700;color:#1e293b;">Summary</span>',
-      "</div>",
-      '<div style="background-color:#f8fafc;background-image:linear-gradient(135deg,#f8fafc,#eef2ff);border-radius:12px;padding:18px 20px;border:1px solid #e0e7ff;">',
-      '<p style="margin:0;color:#475569;font-size:14px;line-height:1.75;">' +
-        this.esc(summary || "No summary available.") +
-        "</p>",
-      "</div></div>",
-    ].join("\n");
-  }
-
-  private buildProductivitySection(prod: any): string {
-    if (!prod || prod.score == null) return "";
-
-    const scoreColor =
-      prod.score >= 80
-        ? "#22c55e"
-        : prod.score >= 60
-          ? "#6366f1"
-          : prod.score >= 40
-            ? "#f59e0b"
-            : "#ef4444";
-    const scoreLabel = this.esc(prod.label || "");
-
-    const breakdownItems = [
-      { label: "On-Topic Focus", val: prod.breakdown?.onTopicScore },
-      { label: "Decisions Made", val: prod.breakdown?.decisionsScore },
-      { label: "Action Items", val: prod.breakdown?.actionItemsScore },
-      { label: "Participation", val: prod.breakdown?.participationScore },
-      { label: "Time Efficiency", val: prod.breakdown?.timeEfficiency },
-    ];
-
-    const breakdownRows = breakdownItems
-      .filter((b) => b.val != null)
-      .map(
-        (b) =>
-          "<tr>" +
-          '<td style="padding:6px 0;color:#64748b;font-size:13px;">' +
-          b.label +
-          "</td>" +
-          '<td style="padding:6px 0;width:50%;">' +
-          '<div style="background-color:#f1f5f9;border-radius:20px;height:8px;overflow:hidden;">' +
-          '<div style="background-color:#7c3aed;background-image:linear-gradient(90deg,#6366f1,#a855f7);width:' +
-          b.val +
-          '%;height:8px;border-radius:20px;"></div></div></td>' +
-          '<td style="padding:6px 0 6px 10px;color:#1e293b;font-weight:600;font-size:13px;text-align:right;">' +
-          b.val +
-          "%</td></tr>",
-      )
-      .join("");
-
-    const breakdownTable = breakdownRows
-      ? '<table style="width:100%;border-collapse:collapse;margin-top:20px;">' +
-        breakdownRows +
-        "</table>"
-      : "";
-
-    const highlights = prod.highlights?.length
-      ? '<div style="margin-top:16px;padding:14px 16px;background-color:#f0fdf4;background-image:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:10px;border-left:3px solid #22c55e;">' +
-        '<div style="font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">&#127881; Highlights</div>' +
-        prod.highlights
-          .map(
-            (h: string) =>
-              '<div style="color:#475569;font-size:13px;padding:3px 0;line-height:1.5;">&bull; ' +
-              this.esc(h) +
-              "</div>",
-          )
-          .join("") +
-        "</div>"
-      : "";
-
-    const improvements = prod.improvements?.length
-      ? '<div style="margin-top:10px;padding:14px 16px;background-color:#fffbeb;background-image:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:10px;border-left:3px solid #f59e0b;">' +
-        '<div style="font-size:12px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">&#128736; Suggestions</div>' +
-        prod.improvements
-          .map(
-            (i: string) =>
-              '<div style="color:#475569;font-size:13px;padding:3px 0;line-height:1.5;">&bull; ' +
-              this.esc(i) +
-              "</div>",
-          )
-          .join("") +
-        "</div>"
-      : "";
-
-    return [
-      '<div style="margin:32px 0 24px;">',
-      '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr><td style="padding:0;">',
-      '<div style="background-color:#faf5ff;background-image:linear-gradient(135deg,#faf5ff,#eef2ff);border:1px solid #e9d5ff;border-radius:16px;padding:24px;text-align:center;">',
-      '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#8b5cf6;font-weight:600;margin-bottom:8px;">Productivity Score</div>',
-      '<div style="font-size:48px;font-weight:800;color:' +
-        scoreColor +
-        ';line-height:1;">' +
-        prod.score +
-        '<span style="font-size:20px;color:#94a3b8;">%</span></div>',
-      '<div style="display:inline-block;margin-top:8px;padding:4px 16px;background:' +
-        scoreColor +
-        "20;color:" +
-        scoreColor +
-        ';border-radius:20px;font-size:13px;font-weight:600;">' +
-        scoreLabel +
-        "</div>",
-      breakdownTable,
-      "</div></td></tr></table>",
-      highlights,
-      improvements,
-      "</div>",
-    ].join("\n");
-  }
-
-  private buildActionItemsSection(actionItems: any[]): string {
-    if (actionItems.length === 0) return "";
-
-    const priorityColors: Record<string, string> = {
-      high: "#ef4444",
-      medium: "#f59e0b",
-      low: "#22c55e",
-    };
-
-    const rows = actionItems
-      .map((item: any, idx: number) => {
-        const pColor =
-          priorityColors[(item.priority || "").toLowerCase()] || "#6366f1";
-        return (
-          "<tr>" +
-          '<td style="padding:14px 16px;border-bottom:1px solid #f1f5f9;">' +
-          '<div style="display:inline-block;width:24px;height:24px;background-color:#7c3aed;background-image:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border-radius:50%;text-align:center;line-height:24px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">' +
-          (idx + 1) +
-          "</div>" +
-          '<span style="color:#1e293b;font-size:14px;font-weight:500;vertical-align:middle;">' +
-          this.esc(item.task) +
-          "</span></td>" +
-          '<td style="padding:14px 12px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;white-space:nowrap;vertical-align:middle;">' +
-          '<span style="display:inline-block;padding:3px 10px;background-color:#f8fafc;background-image:linear-gradient(135deg,#f8fafc,#eef2ff);border-radius:6px;font-weight:500;">' +
-          this.esc(item.owner || "Unassigned") +
-          "</span></td>" +
-          '<td style="padding:14px 12px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;white-space:nowrap;vertical-align:middle;">' +
-          this.esc(item.dueDate || "--") +
-          "</td>" +
-          '<td style="padding:14px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;">' +
-          '<span style="display:inline-block;padding:3px 10px;background:' +
-          pColor +
-          "15;color:" +
-          pColor +
-          ';border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;">' +
-          this.esc(item.priority || "Normal") +
-          "</span></td></tr>"
-        );
-      })
-      .join("");
-
-    return [
-      '<div style="margin:28px 0;">',
-      '<div style="margin-bottom:16px;">',
-      '<span style="font-size:18px;margin-right:8px;">&#9989;</span>',
-      '<span style="font-size:17px;font-weight:700;color:#1e293b;">Action Items</span>',
-      '<span style="margin-left:8px;display:inline-block;padding:2px 10px;background-color:#7c3aed;background-image:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border-radius:12px;font-size:12px;font-weight:600;">' +
-        actionItems.length +
-        "</span>",
-      "</div>",
-      '<table style="width:100%;border-collapse:collapse;font-size:14px;border:1px solid #f1f5f9;border-radius:12px;overflow:hidden;">',
-      '<thead><tr style="background-color:#faf5ff;background-image:linear-gradient(135deg,#faf5ff,#eef2ff);">',
-      '<th style="padding:12px 16px;text-align:left;color:#6366f1;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Task</th>',
-      '<th style="padding:12px 12px;text-align:left;color:#6366f1;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Owner</th>',
-      '<th style="padding:12px 12px;text-align:left;color:#6366f1;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Due</th>',
-      '<th style="padding:12px 12px;text-align:left;color:#6366f1;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Priority</th>',
-      "</tr></thead>",
-      "<tbody>" + rows + "</tbody>",
-      "</table></div>",
-    ].join("\n");
-  }
-
-  private buildDecisionsSection(decisions: string[]): string {
-    if (decisions.length === 0) return "";
-
-    const items = decisions
-      .map(
-        (d: string, idx: number) =>
-          '<div style="padding:12px 16px;background-color:' +
-          (idx % 2 === 0 ? "#faf5ff" : "#ffffff") +
-          ";background-image:" +
-          (idx % 2 === 0
-            ? "linear-gradient(135deg,#faf5ff,#f5f3ff)"
-            : "linear-gradient(135deg,#ffffff,#faf5ff)") +
-          ';border-left:3px solid #8b5cf6;margin-bottom:6px;border-radius:0 8px 8px 0;">' +
-          '<span style="color:#8b5cf6;font-weight:700;margin-right:8px;">' +
-          (idx + 1) +
-          ".</span>" +
-          '<span style="color:#334155;font-size:14px;">' +
-          this.esc(d) +
-          "</span></div>",
-      )
-      .join("");
-
-    return [
-      '<div style="margin:28px 0;">',
-      '<div style="margin-bottom:14px;">',
-      '<span style="font-size:18px;margin-right:8px;">&#128161;</span>',
-      '<span style="font-size:17px;font-weight:700;color:#1e293b;">Key Decisions</span>',
-      "</div>",
-      items,
-      "</div>",
-    ].join("\n");
-  }
-
-  private buildNextStepsSection(nextSteps: string[]): string {
-    if (nextSteps.length === 0) return "";
-
-    const items = nextSteps
-      .map(
-        (s: string, idx: number) =>
-          '<div style="padding:12px 16px;background-color:' +
-          (idx % 2 === 0 ? "#eef2ff" : "#ffffff") +
-          ";background-image:" +
-          (idx % 2 === 0
-            ? "linear-gradient(135deg,#eef2ff,#e0e7ff)"
-            : "linear-gradient(135deg,#ffffff,#eef2ff)") +
-          ';border-left:3px solid #6366f1;margin-bottom:6px;border-radius:0 8px 8px 0;">' +
-          '<span style="color:#6366f1;font-weight:700;margin-right:8px;">&#10148;</span>' +
-          '<span style="color:#334155;font-size:14px;">' +
-          this.esc(s) +
-          "</span></div>",
-      )
-      .join("");
-
-    return [
-      '<div style="margin:28px 0;">',
-      '<div style="margin-bottom:14px;">',
-      '<span style="font-size:18px;margin-right:8px;">&#128640;</span>',
-      '<span style="font-size:17px;font-weight:700;color:#1e293b;">Next Steps</span>',
-      "</div>",
-      items,
-      "</div>",
-    ].join("\n");
-  }
-
-  private esc(text: string): string {
-    return (text || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+    return ejs.renderFile(this.templatePath, {
+      title: meeting.title,
+      timeDisplay,
+      durationMin,
+      participantCount: participants.length,
+      actionItemCount: actionItems.length,
+      decisionCount: decisions.length,
+      participants,
+      summary: meeting.summary,
+      productivity,
+      actionItems,
+      decisions,
+      nextSteps,
+      meetingUrl,
+    });
   }
 }

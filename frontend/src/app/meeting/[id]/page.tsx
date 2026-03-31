@@ -20,6 +20,7 @@ import {
   Clock,
   Users,
   Languages,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -116,6 +117,7 @@ const MeetingDetailPage = () => {
   const [translatedTranscript, setTranslatedTranscript] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
+  const [showParticipantsModal, setShowParticipantsModal] = useState(false);
 
   const meetingId = params.id as string;
 
@@ -364,7 +366,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
             {/* Participants */}
             <div>
               <p className="text-sm font-medium text-gray-700 mb-1">Participants</p>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 {(selectedMeeting.participants || []).slice(0, 3).map((participant: any, idx: number) => {
                   const displayName = participant.displayName || participant.name || participant.email || '?';
                   const initials = displayName
@@ -384,10 +386,19 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                   );
                 })}
                 {selectedMeeting.participants.length > 3 && (
-                  <div className="flex-shrink-0 rounded-full bg-gray-300 h-8 w-8 flex items-center justify-center text-xs font-bold text-gray-700">
+                  <button
+                    onClick={() => setShowParticipantsModal(true)}
+                    className="flex-shrink-0 rounded-full bg-gray-200 hover:bg-gray-300 h-8 w-8 flex items-center justify-center text-xs font-bold text-gray-700 transition-colors cursor-pointer"
+                  >
                     +{selectedMeeting.participants.length - 3}
-                  </div>
+                  </button>
                 )}
+                <button
+                  onClick={() => setShowParticipantsModal(true)}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium ml-1 transition-colors"
+                >
+                  View all
+                </button>
               </div>
             </div>
 
@@ -763,6 +774,96 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
           </div>
         </div>
       </div>
+      {/* Participants Modal */}
+      {showParticipantsModal && selectedMeeting && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          onClick={() => setShowParticipantsModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-600" />
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Participants ({selectedMeeting.participants.length})
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowParticipantsModal(false)}
+                className="rounded-lg p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Participant List */}
+            <div className="overflow-y-auto px-6 py-3 flex-1">
+              {(selectedMeeting.participants || []).map((participant: any, idx: number) => {
+                const displayName = participant.displayName || participant.name || participant.email || '?';
+                const initials = displayName
+                  .split(' ')
+                  .map((n: string) => n[0])
+                  .join('')
+                  .toUpperCase()
+                  .slice(0, 2);
+                const avatarColors = [
+                  'from-blue-400 to-blue-600',
+                  'from-purple-400 to-purple-600',
+                  'from-pink-400 to-pink-600',
+                  'from-amber-400 to-amber-600',
+                  'from-green-400 to-green-600',
+                  'from-cyan-400 to-cyan-600',
+                  'from-red-400 to-red-600',
+                  'from-indigo-400 to-indigo-600',
+                ];
+                const colorClass = avatarColors[idx % avatarColors.length];
+
+                return (
+                  <div
+                    key={participant.id || participant.email || idx}
+                    className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-b-0"
+                  >
+                    <div
+                      className={`flex-shrink-0 rounded-full bg-gradient-to-br ${colorClass} h-10 w-10 flex items-center justify-center text-sm font-bold text-white`}
+                    >
+                      {initials}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {displayName}
+                      </p>
+                      {participant.email && (
+                        <p className="text-xs text-gray-500 truncate">
+                          {participant.email}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        participant.role === 'organizer'
+                          ? 'bg-blue-100 text-blue-700'
+                          : participant.role === 'optional'
+                          ? 'bg-gray-100 text-gray-600'
+                          : 'bg-green-100 text-green-700'
+                      }`}
+                    >
+                      {participant.role === 'organizer'
+                        ? 'Organizer'
+                        : participant.role === 'optional'
+                        ? 'Optional'
+                        : 'Attendee'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };
