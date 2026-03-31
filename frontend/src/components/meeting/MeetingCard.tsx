@@ -47,10 +47,10 @@ export const MeetingCard = ({ meeting }: MeetingCardProps) => {
     <div className="group card-hover flex h-full flex-col overflow-hidden p-5 transition-smooth">
       {/* Header */}
       <div className="mb-4 flex items-start justify-between gap-3">
-        <h3 className="flex-1 text-lg font-bold text-gray-900 truncate group-hover:text-blue-600">
+        <h3 className="flex-1 text-lg font-bold text-gray-900 truncate group-hover:text-indigo-600">
           {meeting.title}
         </h3>
-        <div className="flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1 group-hover:bg-blue-50">
+        <div className="flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1 group-hover:bg-indigo-50">
           {getStatusIcon()}
           <span className="text-xs font-medium text-gray-700 whitespace-nowrap">
             {getStatusLabel()}
@@ -79,7 +79,7 @@ export const MeetingCard = ({ meeting }: MeetingCardProps) => {
               <div
                 key={participant.id || participant.email || idx}
                 title={displayName}
-                className="flex-shrink-0 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 h-7 w-7 flex items-center justify-center text-xs font-bold text-white border-2 border-white"
+                className="flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 h-7 w-7 flex items-center justify-center text-xs font-bold text-white border-2 border-white"
               >
                 {initials}
               </div>
@@ -98,7 +98,7 @@ export const MeetingCard = ({ meeting }: MeetingCardProps) => {
         <div className="flex items-center gap-2 text-sm">
           {meeting.actionItems && meeting.actionItems.length > 0 ? (
             <>
-              <CheckCircle className="h-4 w-4 text-blue-600" />
+              <CheckCircle className="h-4 w-4 text-indigo-600" />
               <span className="font-semibold text-gray-900">
                 {meeting.actionItems.length} action items
               </span>

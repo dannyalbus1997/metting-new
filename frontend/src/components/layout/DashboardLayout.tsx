@@ -80,7 +80,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   className={`flex items-center gap-3 rounded-lg px-4 py-3 text-gray-700 transition-smooth ${
                     item.disabled
                       ? 'cursor-not-allowed opacity-50'
-                      : 'hover:bg-blue-50 hover:text-blue-600'
+                      : 'hover:bg-indigo-50 hover:text-indigo-600'
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -177,9 +177,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               {/* App-only logout */}
               <button
                 onClick={() => handleLogout(false)}
-                className="w-full flex items-start gap-3 rounded-lg border border-gray-200 p-4 text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                className="w-full flex items-start gap-3 rounded-lg border border-gray-200 p-4 text-left hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
               >
-                <Monitor className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <Monitor className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-gray-900">App Only</p>
                   <p className="text-xs text-gray-500 mt-0.5">

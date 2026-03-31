@@ -34,11 +34,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-cyan-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 px-4">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-blue-200 to-cyan-200 opacity-30 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-blue-200 to-purple-200 opacity-30 blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-indigo-200 to-violet-200 opacity-30 blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-violet-200 to-purple-200 opacity-30 blur-3xl"></div>
       </div>
 
       {/* Content */}
@@ -110,11 +110,11 @@ const LoginPage = () => {
           <div className="mt-8 border-t border-gray-200 pt-6 text-center text-sm text-gray-600">
             <p>
               By signing in, you agree to our{' '}
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-700">
+              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-700">
                 Terms of Service
               </a>
               {' '}and{' '}
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-700">
+              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-700">
                 Privacy Policy
               </a>
             </p>

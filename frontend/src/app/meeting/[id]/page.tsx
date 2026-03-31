@@ -327,7 +327,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
         <div className="border-b border-gray-200 bg-white px-6 py-4 sm:px-8">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-smooth"
+            className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 transition-smooth"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to dashboard
@@ -379,7 +379,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                     <div
                       key={participant.id || participant.email || idx}
                       title={displayName}
-                      className="flex-shrink-0 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 h-8 w-8 flex items-center justify-center text-xs font-bold text-white mm-avatar-hover"
+                      className="flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 h-8 w-8 flex items-center justify-center text-xs font-bold text-white mm-avatar-hover"
                     >
                       {initials}
                     </div>
@@ -395,7 +395,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                 )}
                 <button
                   onClick={() => setShowParticipantsModal(true)}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium ml-1 transition-colors"
+                  className="text-xs text-indigo-600 hover:text-indigo-800 font-medium ml-1 transition-colors"
                 >
                   View all
                 </button>
@@ -477,7 +477,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`border-b-2 px-4 py-4 font-medium transition-smooth ${
                   activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
+                    ? 'border-indigo-600 text-indigo-600'
                     : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -525,7 +525,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                             type="checkbox"
                             checked={item.status === 'completed'}
                             readOnly
-                            className="mt-1 h-5 w-5 rounded border-gray-300 accent-blue-600"
+                            className="mt-1 h-5 w-5 rounded border-gray-300 accent-indigo-600"
                           />
                           <div className="flex-1">
                             <p
@@ -584,7 +584,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                     <div className="space-y-3 mm-stagger">
                       {selectedMeeting.keyPoints.map((decision, i) => (
                         <div key={i} className="flex gap-4 rounded-lg bg-white p-4 mm-card-in mm-hover-lift">
-                          <div className="flex-shrink-0 rounded-full bg-blue-100 h-8 w-8 flex items-center justify-center font-semibold text-blue-600">
+                          <div className="flex-shrink-0 rounded-full bg-indigo-100 h-8 w-8 flex items-center justify-center font-semibold text-indigo-600">
                             {i + 1}
                           </div>
                           <p className="pt-1 text-gray-700">{decision}</p>
@@ -666,7 +666,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                             cx="50" cy="50" r="42" fill="none"
                             stroke={
                               selectedMeeting.productivity.score >= 80 ? '#22c55e' :
-                              selectedMeeting.productivity.score >= 60 ? '#3b82f6' :
+                              selectedMeeting.productivity.score >= 60 ? '#6366f1' :
                               selectedMeeting.productivity.score >= 40 ? '#f59e0b' : '#ef4444'
                             }
                             strokeWidth="8"
@@ -690,7 +690,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Score Breakdown</h3>
                     <div className="space-y-4">
                       {[
-                        { label: 'On-Topic Focus', value: selectedMeeting.productivity.breakdown.onTopicScore, color: 'bg-blue-500' },
+                        { label: 'On-Topic Focus', value: selectedMeeting.productivity.breakdown.onTopicScore, color: 'bg-indigo-500' },
                         { label: 'Decisions Made', value: selectedMeeting.productivity.breakdown.decisionsScore, color: 'bg-green-500' },
                         { label: 'Action Items Quality', value: selectedMeeting.productivity.breakdown.actionItemsScore, color: 'bg-purple-500' },
                         { label: 'Participation Balance', value: selectedMeeting.productivity.breakdown.participationScore, color: 'bg-orange-500' },
@@ -787,7 +787,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-blue-600" />
+                <Users className="h-5 w-5 text-indigo-600" />
                 <h3 className="text-lg font-semibold text-gray-900">
                   Participants ({selectedMeeting.participants.length})
                 </h3>
@@ -811,7 +811,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                   .toUpperCase()
                   .slice(0, 2);
                 const avatarColors = [
-                  'from-blue-400 to-blue-600',
+                  'from-indigo-400 to-purple-600',
                   'from-purple-400 to-purple-600',
                   'from-pink-400 to-pink-600',
                   'from-amber-400 to-amber-600',
@@ -845,7 +845,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         participant.role === 'organizer'
-                          ? 'bg-blue-100 text-blue-700'
+                          ? 'bg-indigo-100 text-indigo-700'
                           : participant.role === 'optional'
                           ? 'bg-gray-100 text-gray-600'
                           : 'bg-green-100 text-green-700'

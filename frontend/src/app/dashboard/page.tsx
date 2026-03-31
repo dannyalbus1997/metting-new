@@ -232,7 +232,7 @@ const DashboardPage = () => {
               {loading && meetings?.length > 0 && (
                 <div className="flex justify-center py-6">
                   <div className="inline-flex items-center gap-2 text-gray-600">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
                     Loading...
                   </div>
                 </div>

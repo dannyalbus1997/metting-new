@@ -23,7 +23,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   processing: 'bg-yellow-100 text-yellow-800',
   pending: 'bg-gray-100 text-gray-800',
   failed: 'bg-red-100 text-red-800',
-  default: 'bg-blue-100 text-blue-800',
+  default: 'bg-indigo-100 text-indigo-800',
 };
 
 const sizeClasses: Record<BadgeSize, string> = {
@@ -36,7 +36,7 @@ const dotColors: Record<BadgeVariant, string> = {
   processing: 'bg-yellow-500',
   pending: 'bg-gray-400',
   failed: 'bg-red-500',
-  default: 'bg-blue-500',
+  default: 'bg-indigo-500',
 };
 
 export default function Badge({

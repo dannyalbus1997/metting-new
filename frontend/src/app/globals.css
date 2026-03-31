@@ -106,7 +106,7 @@
   }
 
   .btn-primary {
-    @apply btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+    @apply btn bg-indigo-500 text-white hover:bg-indigo-600 focus:ring-indigo-500;
   }
 
   .btn-secondary {
@@ -123,7 +123,7 @@
 
   /* Input styles */
   .input {
-    @apply rounded-lg border border-gray-300 px-3 py-2 font-medium text-gray-900 placeholder-gray-500 transition-smooth focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500;
+    @apply rounded-lg border border-gray-300 px-3 py-2 font-medium text-gray-900 placeholder-gray-500 transition-smooth focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500;
   }
 
   /* Badge styles */
@@ -132,7 +132,7 @@
   }
 
   .badge-primary {
-    @apply badge bg-blue-100 text-blue-700;
+    @apply badge bg-indigo-100 text-indigo-700;
   }
 
   .badge-success {

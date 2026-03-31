@@ -71,11 +71,11 @@ const LoginCallbackPage = () => {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-cyan-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 px-4">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-blue-200 to-cyan-200 opacity-30 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-blue-200 to-purple-200 opacity-30 blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-indigo-200 to-violet-200 opacity-30 blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-violet-200 to-purple-200 opacity-30 blur-3xl"></div>
       </div>
 
       {/* Content */}
@@ -85,8 +85,8 @@ const LoginCallbackPage = () => {
           {!error && (
             <div className="space-y-6 text-center">
               <div className="flex justify-center">
-                <div className="rounded-full bg-blue-100 p-4">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <div className="rounded-full bg-indigo-100 p-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
                 </div>
               </div>
               <div>
@@ -118,7 +118,7 @@ const LoginCallbackPage = () => {
               {/* Retry Button */}
               <button
                 onClick={handleRetry}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 text-white hover:bg-blue-700 transition-colors"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-500 py-3 text-white hover:bg-indigo-600 transition-colors"
               >
                 <RotateCcw className="h-4 w-4" />
                 Try Again
@@ -128,7 +128,7 @@ const LoginCallbackPage = () => {
               <p className="text-center text-sm text-gray-600">
                 <a
                   href="/login"
-                  className="font-medium text-blue-600 hover:text-blue-700"
+                  className="font-medium text-indigo-600 hover:text-indigo-700"
                 >
                   Back to sign in
                 </a>

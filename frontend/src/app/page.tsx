@@ -38,11 +38,11 @@ const HomePage = () => {
   ];
 
   return (
-    <div className="min-h-screen w-full overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+    <div className="min-h-screen w-full overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Animated gradient blobs */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-blue-200 to-cyan-200 opacity-30 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-blue-200 to-purple-200 opacity-30 blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-indigo-200 to-violet-200 opacity-30 blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-violet-200 to-purple-200 opacity-30 blur-3xl"></div>
       </div>
 
       {/* Content */}
@@ -63,7 +63,7 @@ const HomePage = () => {
           <div className="mx-auto max-w-4xl text-center">
             {/* Badge */}
             <div className="mb-8 inline-block">
-              <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700">
+              <span className="rounded-full bg-indigo-100 px-4 py-2 text-sm font-semibold text-indigo-700">
                 ✨ Powered by AI
               </span>
             </div>
@@ -91,7 +91,7 @@ const HomePage = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 sm:gap-8">
               <div>
-                <p className="text-3xl font-bold text-blue-600">500+</p>
+                <p className="text-3xl font-bold text-indigo-600">500+</p>
                 <p className="text-gray-600">Meetings Analyzed</p>
               </div>
               <div>
@@ -99,7 +99,7 @@ const HomePage = () => {
                 <p className="text-gray-600">Accuracy Rate</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-blue-600">10h+</p>
+                <p className="text-3xl font-bold text-indigo-600">10h+</p>
                 <p className="text-gray-600">Time Saved</p>
               </div>
             </div>
@@ -121,8 +121,8 @@ const HomePage = () => {
                   key={index}
                   className="card-hover p-8"
                 >
-                  <div className="mb-4 inline-flex rounded-lg bg-blue-100 p-3">
-                    <Icon className="h-6 w-6 text-blue-600" />
+                  <div className="mb-4 inline-flex rounded-lg bg-indigo-100 p-3">
+                    <Icon className="h-6 w-6 text-indigo-600" />
                   </div>
                   <h3 className="mb-2 text-xl font-semibold">{feature.title}</h3>
                   <p className="text-gray-600">{feature.description}</p>
@@ -134,16 +134,16 @@ const HomePage = () => {
 
         {/* CTA Section */}
         <section className="container-max py-20">
-          <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-8 py-16 text-center text-white sm:px-12">
+          <div className="rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 px-8 py-16 text-center text-white sm:px-12">
             <h2 className="mb-4 text-3xl font-bold sm:text-4xl">
               Ready to transform your meetings?
             </h2>
-            <p className="mb-8 text-lg text-blue-50">
+            <p className="mb-8 text-lg text-indigo-50">
               Join teams that are already saving hours every week with Sumsy.
             </p>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 rounded-lg bg-white px-8 py-3 font-semibold text-blue-600 transition-all hover:bg-blue-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-white px-8 py-3 font-semibold text-indigo-600 transition-all hover:bg-indigo-50"
             >
               Get Started Free
               <ArrowRight className="h-5 w-5" />
