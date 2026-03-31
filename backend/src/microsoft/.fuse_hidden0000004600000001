@@ -64,7 +64,7 @@ export class MicrosoftService {
 
       this.logger.debug(`Exchanging authorization code for tokens from ${this.tokenUrl}`);
 
-      const formData = new URLSearchParams(payload as unknown as Record<string, string>);
+      const formData = new URLSearchParams(payload as Record<string, string>);
       const response = await this.httpClient.post<MicrosoftTokenResponse>(this.tokenUrl, formData.toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
@@ -112,7 +112,7 @@ export class MicrosoftService {
 
       this.logger.debug('Attempting to refresh access token');
 
-      const formData = new URLSearchParams(payload as unknown as Record<string, string>);
+      const formData = new URLSearchParams(payload as Record<string, string>);
       const response = await this.httpClient.post<MicrosoftTokenResponse>(this.tokenUrl, formData.toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
