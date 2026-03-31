@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description:
     'Transform your meetings with AI-powered summaries, action items, and team insights. Sumsy helps you capture key points and stay organized.',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.svg',
   },
 };
 

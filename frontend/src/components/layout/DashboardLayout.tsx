@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout } from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Menu,
   X,
@@ -59,9 +60,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {/* Logo/Header */}
           <div className="border-b border-gray-200 px-6 py-6">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="flex-shrink-0 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 p-2">
-                <Calendar className="h-6 w-6 text-white" />
-              </div>
+              <Image src="/logo.svg" alt="Sumsy" width={40} height={40} className="flex-shrink-0" />
               <span className="text-xl font-bold gradient-text">Sumsy</span>
             </Link>
           </div>

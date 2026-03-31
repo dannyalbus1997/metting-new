@@ -83,7 +83,7 @@
 @layer components {
   /* Gradient text */
   .gradient-text {
-    @apply bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent;
   }
 
   /* Smooth transitions */
