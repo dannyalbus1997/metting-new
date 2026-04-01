@@ -85,8 +85,8 @@ export class UserService {
    */
   async updateTokens(
     id: string,
-    accessToken: string,
-    refreshToken: string,
+    accessToken: string|null,
+    refreshToken: string|null,
   ): Promise<UserDocument> {
     try {
       const user = await this.userModel

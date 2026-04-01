@@ -114,6 +114,16 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
    * Find completed meetings that haven't had emails sent, send summary emails.
    */
   async processCompletedMeetings(): Promise<void> {
+    // Skip if no users with valid Microsoft tokens exist
+    const hasTokenUsers = await this.userModel.exists({
+      accessToken: { $ne: null, $exists: true },
+      refreshToken: { $ne: null, $exists: true },
+    });
+    if (!hasTokenUsers) {
+      this.logger.debug('No users with tokens in DB — skipping email cron tick');
+      return;
+    }
+
     const meetings = await this.meetingModel
       .find({
         status: MeetingStatus.COMPLETED,

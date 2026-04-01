@@ -232,7 +232,7 @@ export class AuthService {
    * Complete logout — clears Microsoft tokens from DB, disabling cron-based services
    */
   async completeLogout(userId: string): Promise<void> {
-    await this.userService.updateTokens(userId, '', '');
+    await this.userService.updateTokens(userId, null, null);
     this.logger.log(`Cleared Microsoft tokens for user ${userId}`);
   }
 

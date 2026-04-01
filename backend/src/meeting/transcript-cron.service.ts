@@ -103,6 +103,14 @@ export class TranscriptCronService implements OnModuleInit, OnModuleDestroy {
   // ─── CRON LOOP ───
 
   private async processEndedMeetings(): Promise<void> {
+    // Skip if no users with valid Microsoft tokens exist
+    const users = await this.userService.findAll();
+    const hasTokenUsers = users.some(u => u.accessToken && u.refreshToken);
+    if (!hasTokenUsers) {
+      this.logger.debug('No users with tokens in DB — skipping transcript cron tick');
+      return;
+    }
+
     const now = new Date();
     // Find online meetings that have ended, have no transcript, and haven't been fetched recently
     const meetings = await this.meetingModel
