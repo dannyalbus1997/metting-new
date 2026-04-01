@@ -103,6 +103,7 @@ export class AiService {
     });
 
     const responseText = response.choices[0]?.message?.content;
+    console.log(responseText);
     if (!responseText) {
       throw new InternalServerErrorException(
         "No response received from OpenAI",
@@ -205,52 +206,88 @@ Rules:
     systemPrompt: string;
     userPrompt: string;
   } {
-    const systemPrompt = `You are an expert meeting analyst and project manager. Your task is to analyze meeting transcripts and extract valuable insights in a structured JSON format.
+  const systemPrompt = `
+You are an expert meeting analyst. Your task is to evaluate a meeting transcript and return structured insights along with a fair productivity assessment.
 
 You will be provided with a meeting transcript and must return a JSON object with the following structure:
+
 {
-  "summary": "A concise 8-10 sentence summary of the meeting's main topics and purpose",
+  "summary": "15-20 sentence summary covering purpose, discussion, and outcomes",
+
   "actionItems": [
     {
-      "task": "Clear, specific description of the action item",
-      "owner": "Name or role of the person responsible. Use 'TBD' if not specified",
-      "dueDate": "Due date in YYYY-MM-DD format. Use 'Not specified' if no deadline was mentioned"
+      "task": "Clear action item",
+      "owner": "Name/role or 'TBD'",
+      "dueDate": "YYYY-MM-DD or 'Not specified'"
     }
   ],
+
   "decisions": [
-    "A decision made during the meeting",
-    "Another decision"
+    "Clear decisions made during the meeting"
   ],
+
   "nextSteps": [
-    "Next step or follow-up item",
-    "Another next step"
+    "Logical next steps based on discussion"
   ],
+
   "productivity": {
-    "score": 75,
-    "label": "Productive",
+    "score": 0-100,
+    "label": "Highly Productive | Productive | Moderate | Needs Improvement | Unproductive",
+
     "breakdown": {
-      "onTopicScore": 80,
-      "decisionsScore": 70,
-      "actionItemsScore": 75,
-      "participationScore": 65,
-      "timeEfficiency": 85
+      "onTopicScore": 0-100,
+      "decisionsScore": 0-100,
+      "actionItemsScore": 0-100,
+      "participationScore": 0-100,
+      "timeEfficiency": 0-100
     },
-    "highlights": ["Clear agenda followed", "All action items assigned owners"],
-    "improvements": ["Some off-topic discussions", "Could improve time boxing"]
+
+    "highlights": [
+      "2-3 things done well"
+    ],
+
+    "improvements": [
+      "2-3 specific improvements"
+    ]
   }
 }
 
-Guidelines:
-- Be thorough in identifying all action items, even if they were mentioned casually
-- Ensure action items are specific and measurable
-- If a person's full name is not provided, use the context to identify them
-- Decisions should be clear statements of what was decided
-- Next steps should be logically ordered and actionable
-- If sections are empty, return empty arrays
-- Productivity score must be 0-100. Label: "Highly Productive" (80-100), "Productive" (60-79), "Moderate" (40-59), "Needs Improvement" (20-39), "Unproductive" (0-19)
-- Breakdown scores are each 0-100: onTopicScore (focus), decisionsScore (decisions made), actionItemsScore (quality of action items), participationScore (balanced participation), timeEfficiency (outcomes vs time)
-- Provide 2-4 highlights (what went well) and 2-4 improvements (suggestions)
-- Return ONLY valid JSON, no additional text or markdown`;
+SCORING RULES:
+
+1. Do NOT default to 0 unless the transcript is empty or meaningless.
+
+2. Use realistic baselines:
+   - If people discussed relevant topics → minimum 50
+   - If outcomes or alignment exist → 60–75
+   - If clear decisions and actions exist → 75+
+
+3. Score each area based on evidence:
+   - productivity → focus and usefulness of discussion
+   - decisions → clarity and number of decisions
+   - actionItems → presence and quality of tasks
+   - participation → involvement of multiple people
+   - timeEfficiency → relevance vs wasted discussion
+
+4. Partial credit is allowed:
+   - If something is implied but not explicit, still give moderate score (50–70)
+
+5. Missing details should NOT heavily penalize:
+   - No owner or deadline ≠ zero
+   - No formal agenda ≠ unproductive
+
+6. Keep scores balanced:
+   - Most meetings fall between 55–85
+
+7. Label mapping:
+   - 80–100 → Highly Productive
+   - 60–79 → Productive
+   - 40–59 → Moderate
+   - 20–39 → Needs Improvement
+   - 0–19 → Unproductive
+
+FINAL INSTRUCTION:
+Be fair and practical. If the meeting had useful discussion or progress, reflect that in the score.
+`;
 
     const userPrompt = `Please analyze the following meeting transcript and return the structured JSON analysis:
 

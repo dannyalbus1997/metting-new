@@ -120,7 +120,9 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       refreshToken: { $ne: null, $exists: true },
     });
     if (!hasTokenUsers) {
-      this.logger.debug('No users with tokens in DB — skipping email cron tick');
+      this.logger.debug(
+        "No users with tokens in DB — skipping email cron tick",
+      );
       return;
     }
 
@@ -154,36 +156,56 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
 
         const html = await this.buildEmailHtml(meeting);
 
-        const message = {
-          senderAddress: this.senderEmail,
-          content: {
-            subject: `Meeting Summary: ${meeting.title}`,
-            html: html,
+        const recipients = [
+          {
+            name: user.name || user.email,
+            email: "talha.wajdan@consultancyoutfit.co.uk",
           },
-          recipients: {
-            to: [
-              {
-                address:"talha.wajdan@consultancyoutfit.co.uk",
-                displayName: user.name || user.email,
+          {
+            name: "azam altaf",
+            email: "muhammadazam.altaf@consultancyoutfit.co.uk",
+          },
+        ];
+
+        for (const recipient of recipients) {
+          try {
+            const message = {
+              senderAddress: this.senderEmail,
+              content: {
+                subject: `Meeting Summary: ${meeting.title}`,
+                html: html,
               },
-            ],
-          },
-        };
+              recipients: {
+                to: [
+                  {
+                    address: recipient.email,
+                    displayName: recipient.name || recipient.email,
+                  },
+                ],
+              },
+            };
 
-        const poller = await this.emailClient!.beginSend(message);
-        const result = await poller.pollUntilDone();
+            const poller = await this.emailClient!.beginSend(message);
+            const result = await poller.pollUntilDone();
 
-        if (result.status === "Succeeded") {
-          meeting.emailSent = true;
-          await meeting.save();
-          this.logger.log(
-            `Email sent to ${user.email} for meeting "${meeting.title}"`,
-          );
-        } else {
-          this.logger.error(
-            `Email send failed for meeting ${meeting._id}: status=${result.status}`,
-          );
+            if (result.status === "Succeeded") {
+              this.logger.log(
+                `Email sent to ${recipient.email} for meeting "${meeting.title}"`,
+              );
+            } else {
+              this.logger.error(
+                `Email send failed for ${recipient.email}, meeting ${meeting._id}: status=${result.status}`,
+              );
+            }
+          } catch (recipientErr: any) {
+            this.logger.error(
+              `Failed to send email to ${recipient.email} for meeting ${meeting._id}: ${recipientErr.message}`,
+            );
+          }
         }
+
+        meeting.emailSent = true;
+        await meeting.save();
       } catch (err: any) {
         this.logger.error(
           `Failed to send email for meeting ${meeting._id}: ${err.message}`,
