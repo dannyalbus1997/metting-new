@@ -209,7 +209,7 @@ export const TranscriptStatus = ({
               )}
               {lastFetchAt && (
                 <div className="text-xs text-gray-300 mt-0.5">
-                  Last checked: {new Date(lastFetchAt).toLocaleTimeString()}
+                  Last checked: {new Date(lastFetchAt).toLocaleTimeString('en-US', { timeZone: 'Asia/Karachi' })}
                 </div>
               )}
             </div>

@@ -245,6 +245,7 @@ export class MicrosoftService {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
+            Prefer: 'outlook.timezone="Asia/Karachi"',
           },
         });
 
@@ -386,7 +387,7 @@ export class MicrosoftService {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
-          Prefer: 'outlook.timezone="UTC"',
+          Prefer: 'outlook.timezone="Asia/Karachi"',
         },
       });
 
@@ -409,6 +410,7 @@ export class MicrosoftService {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
+            Prefer: 'outlook.timezone="Asia/Karachi"',
           },
         });
 

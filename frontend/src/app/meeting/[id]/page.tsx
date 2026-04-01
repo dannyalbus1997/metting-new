@@ -209,7 +209,7 @@ const MeetingDetailPage = () => {
 
     const content = `
 Meeting: ${selectedMeeting.title}
-Date: ${format(new Date(selectedMeeting.startTime), 'PPpp')}
+Date: ${new Date(selectedMeeting.startTime).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Karachi' })}
 Duration: ${selectedMeeting.duration} minutes
 Participants: ${selectedMeeting.participants.map((p) => p.displayName).join(', ')}
 
@@ -342,7 +342,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                 {selectedMeeting.title}
               </h1>
               <p className="text-gray-600">
-                {format(new Date(selectedMeeting.startTime), 'PPpp')} •{' '}
+                {new Date(selectedMeeting.startTime).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Karachi' })} •{' '}
                 {selectedMeeting.duration} minutes
               </p>
             </div>
@@ -550,7 +550,7 @@ ${selectedMeeting.keyPoints?.map((point) => `- ${point}`).join('\n') || 'No key 
                               <span className="inline-flex items-center gap-1 text-sm text-gray-600">
                                 <Clock className="h-4 w-4" />
                                 {item.dueDate && !isNaN(new Date(item.dueDate).getTime())
-                                  ? format(new Date(item.dueDate), 'MMM d, yyyy')
+                                  ? new Date(item.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Karachi' })
                                   : item.dueDate || 'No due date'}
                               </span>
                               <span

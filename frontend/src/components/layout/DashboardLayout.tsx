@@ -138,6 +138,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
+                timeZone: 'Asia/Karachi',
               })}
             </div>
           </div>

@@ -163,7 +163,7 @@ export default function ActionItemList({
                     {/* Due Date */}
                     <div className="flex items-center gap-1 text-xs text-gray-600">
                       <Clock className="w-3 h-3" />
-                      {format(new Date(item.dueDate), 'MMM d, yyyy')}
+                      {new Date(item.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Karachi' })}
                     </div>
 
                     {/* Arrow Indicator */}

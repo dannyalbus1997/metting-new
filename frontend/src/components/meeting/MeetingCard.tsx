@@ -10,8 +10,8 @@ interface MeetingCardProps {
 
 export const MeetingCard = ({ meeting }: MeetingCardProps) => {
   const startDate = new Date(meeting.startTime);
-  const formattedDate = format(startDate, 'MMM d, yyyy');
-  const formattedTime = format(startDate, 'h:mm a');
+  const formattedDate = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Karachi' });
+  const formattedTime = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Karachi' });
 
   const participants = meeting.participants || [];
   const displayParticipants = participants.slice(0, 3);

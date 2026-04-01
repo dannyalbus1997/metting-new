@@ -195,15 +195,18 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "Asia/Karachi",
     });
     const timeStr = startDate.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "Asia/Karachi",
     });
     const endTimeStr = endDate
       ? endDate.toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
+          timeZone: "Asia/Karachi",
         })
       : "";
     const durationMs = endDate ? endDate.getTime() - startDate.getTime() : 0;
