@@ -153,7 +153,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           recipients: {
             to: [
               {
-                address: user.email,
+                address:"talha.wajdan@consultancyoutfit.co.uk",
                 displayName: user.name || user.email,
               },
             ],
