@@ -35,56 +35,6 @@
 </tr>
 </table></td></tr>
 
-<!-- Participants -->
-<% if (participants.length > 0) {
-  var visibleCount = 4;
-  var hasMore = participants.length > visibleCount;
-  var avatarColors = ['#6366f1','#8b5cf6','#a855f7','#ec4899','#f59e0b','#22c55e','#06b6d4','#ef4444'];
-%>
-<tr><td style="padding:20px 32px 0;">
-<div style="margin-bottom:14px;">
-<span style="font-size:18px;margin-right:8px;">&#128101;</span>
-<span style="font-size:17px;font-weight:700;color:#1e293b;">Participants</span>
-<span style="margin-left:8px;display:inline-block;padding:2px 10px;background-color:#7c3aed;background-image:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border-radius:12px;font-size:12px;font-weight:600;"><%= participants.length %></span>
-</div>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e0e7ff;border-radius:12px;overflow:hidden;">
-<% participants.forEach(function(p, idx) {
-  var name = p.displayName || p.name || p.email || '?';
-  var initials = name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
-  var color = avatarColors[idx % avatarColors.length];
-  var isHidden = hasMore && idx >= visibleCount;
-  var bgColor = idx % 2 === 0 ? '#faf5ff' : '#ffffff';
-%>
-<tr class="participant-row" style="<%= isHidden ? 'display:none;' : '' %>">
-<td style="padding:10px 16px;background-color:<%= bgColor %>;">
-<table cellpadding="0" cellspacing="0"><tr>
-<td style="padding-right:12px;vertical-align:middle;">
-<div style="width:36px;height:36px;border-radius:50%;background-color:<%= color %>;color:#fff;font-size:13px;font-weight:700;line-height:36px;text-align:center;"><%= initials %></div>
-</td>
-<td style="vertical-align:middle;">
-<div style="color:#1e293b;font-size:14px;font-weight:600;"><%= name %></div>
-<% if (p.email) { %>
-<div style="color:#94a3b8;font-size:12px;margin-top:1px;"><%= p.email %></div>
-<% } %>
-</td>
-</tr></table>
-</td>
-</tr>
-<% }); %>
-
-<% if (hasMore) { %>
-<tr>
-<td style="padding:10px 16px;text-align:center;background-color:#f8fafc;">
-<span style="color:#6366f1;font-size:13px;font-weight:600;">+ <%= participants.length - visibleCount %> more participant<%= participants.length - visibleCount > 1 ? 's' : '' %></span>
-</td>
-</tr>
-<% } %>
-</table>
-
-</td></tr>
-<% } %>
-
 <!-- Main content -->
 <tr><td style="padding:28px 32px;">
 
@@ -214,6 +164,53 @@
 <span style="color:#6366f1;font-weight:700;margin-right:8px;">&#10148;</span>
 <span style="color:#334155;font-size:14px;"><%= s %></span></div>
 <% }); %>
+</div>
+<% } %>
+
+<!-- Participants -->
+<% if (participants.length > 0) {
+  var avatarColors = ['#6366f1','#8b5cf6','#a855f7','#ec4899','#f59e0b','#22c55e','#06b6d4','#ef4444'];
+  var colsPerRow = 4;
+%>
+<div style="margin:28px 0;">
+<div style="margin-bottom:14px;">
+<span style="font-size:18px;margin-right:8px;">&#128101;</span>
+<span style="font-size:17px;font-weight:700;color:#1e293b;">Participants</span>
+<span style="margin-left:8px;display:inline-block;padding:2px 10px;background-color:#7c3aed;background-image:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border-radius:12px;font-size:12px;font-weight:600;"><%= participants.length %></span>
+</div>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e0e7ff;border-radius:12px;overflow:hidden;">
+<% for (var i = 0; i < participants.length; i += colsPerRow) {
+  var rowIdx = i / colsPerRow;
+  var bgColor = rowIdx % 2 === 0 ? '#faf5ff' : '#ffffff';
+%>
+<tr>
+<% for (var j = 0; j < colsPerRow; j++) {
+  if (i + j < participants.length) {
+    var p = participants[i + j];
+    var name = p.displayName || p.name || p.email || '?';
+    var initials = name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
+    var color = avatarColors[(i + j) % avatarColors.length];
+%>
+<td width="25%" style="padding:10px 12px;background-color:<%= bgColor %>;vertical-align:top;">
+<table cellpadding="0" cellspacing="0"><tr>
+<td style="padding-right:10px;vertical-align:middle;">
+<div style="width:36px;height:36px;border-radius:50%;background-color:<%= color %>;color:#fff;font-size:13px;font-weight:700;line-height:36px;text-align:center;"><%= initials %></div>
+</td>
+<td style="vertical-align:middle;">
+<div style="color:#1e293b;font-size:14px;font-weight:600;"><%= name %></div>
+<% if (p.email) { %>
+<div style="color:#94a3b8;font-size:12px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;max-width:140px;"><%= p.email %></div>
+<% } %>
+</td>
+</tr></table>
+</td>
+<% } else { %>
+<td width="25%" style="padding:10px 12px;background-color:<%= bgColor %>;"></td>
+<% } } %>
+</tr>
+<% } %>
+</table>
 </div>
 <% } %>
 
